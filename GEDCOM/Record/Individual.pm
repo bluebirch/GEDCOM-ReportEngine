@@ -314,6 +314,20 @@ sub summary {
     # Händelser
     $t .= $self->listofevents( heading => "### Kronologi" );
 
+    # Dereference media objects (if any)
+    my @media = map { $_->reference } $self->get_records( 'OBJE');
+
+    # Add media objects as implicit figures (pandoc markdown only).
+    foreach my $media (@media) {
+
+        # print media if it was not already printed
+        if (!$self->{global}->{printed}->{ $media->id }) {
+            $t .= "![" . $media->title . "](" . $media->file . ")\n\n";
+            # Remember that this media has already been printed.
+            $self->{global}->{printed}->{ $media->id } = 1;
+        }
+    }
+
     # Remember this individual
     $self->{global}->{printed}->{ $self->id } = 1;
 
@@ -461,7 +475,7 @@ sub _report {
     # generationer i trädet.
     my $sub         = 'make_' . $type . '_tree';
     my $type_refn   = $type . '_refn';
-    my $generations = $opt{generations} ? $opt{generations} : 10;
+    my $generations = $opt{generations} ? $opt{generations} : 20;
 
     # Detta är en flagga som anger huruvida vi skall skriva ut information om
     # make/maka i trädet. Det gör vi i stamtavlor, men inte i antavlor.

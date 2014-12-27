@@ -1,3 +1,4 @@
+package GEDCOM::Record::Family;
 
 =pod
 
@@ -7,7 +8,6 @@ Family records.
 
 =cut
 
-package GEDCOM::Record::Family;
 use base qw(GEDCOM::Record);
 use strict;
 use warnings;

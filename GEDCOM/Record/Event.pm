@@ -132,7 +132,6 @@ sub as_string {
     else {
         $t = $self->name;
     }
-    print STDERR "==> event: $t\n";
     return $t;
 }
 

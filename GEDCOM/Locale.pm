@@ -25,7 +25,7 @@ BEGIN {
     $Locale = setlocale(LC_MESSAGES);
     $Locale =~ s/\..*//;
 
-    print "Setting locale $Locale\n";
+    print STDERR "Setting locale $Locale\n";
     if ( eval "require GEDCOM::Locale::$Locale" ) {
         eval "\%Translation = \%GEDCOM::Locale::${Locale}::T";
     }

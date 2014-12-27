@@ -12,6 +12,7 @@ use GEDCOM::Record::Attribute;
 use GEDCOM::Record::Place;
 use GEDCOM::Record::Individual;
 use GEDCOM::Record::Family;
+use GEDCOM::Record::Object;
 use Data::Dumper;
 
 our @EVENTS;
@@ -202,6 +203,9 @@ sub new {
     elsif ( $tag eq 'PLAC' ) {
         $class .= '::Place';
     }
+    elsif ( $tag eq 'OBJE' && $level == 0) {
+         $class .= '::Object';
+    }
     elsif ( grep m/$tag/, @EVENTS ) {
         $class .= '::Event';
     }
@@ -229,6 +233,13 @@ sub parse {
     }
 }
 
+=item get_value( $tag )
+
+Return values of subrecords of type $tag. In scalar mode, return the first
+value only.
+
+=cut
+
 sub get_value {
     my $self = shift;
     my @value = map( $_->value, $self->get_records(@_) );
@@ -237,11 +248,24 @@ sub get_value {
     return wantarray ? @value : ( $value[0] || '' );
 }
 
+=item get_record( $tag )
+
+Return the first subrecord of type $tag.
+
+=cut
+
 sub get_record {
     my $self   = shift;
     my $record = $self->get_records(@_);
     return $record;
 }
+
+=item get_records( $tag )
+
+Return subrecords of type $tag. In scalar mode, return the first subrecord
+only.
+
+=cut
 
 sub get_records {
     my $self = shift;
@@ -322,8 +346,15 @@ sub xref {
     return $self->id;
 }
 
-# Check if record is a reference to another record. In that case,
-# return the referenced record.
+=item reference()
+
+Check if record is a reference to another record. In that case,
+return the referenced record.
+
+This should perhaps be called "dereference" for clarity...
+
+=cut
+
 sub reference {
     my $self = shift;
     return $self->{global}->{xref}->{ $self->value };
@@ -361,6 +392,13 @@ sub sortkey {
 #     }
 # }
 
+=item get_record_path( $tag_path )
+
+Return records for specified subrecord path, for example FAM.MARR or
+FILE.TITL.
+
+=cut
+
 sub get_record_path {
     my ( $self, $path ) = @_;
     return '' unless ($path);
@@ -384,6 +422,12 @@ sub get_record_path {
     }
     return wantarray ? @res : ( $res[0] || '' );
 }
+
+=item get_value_path ()
+
+Return values from specified subrecord path (see get_value_record above).
+
+=cut
 
 sub get_value_path {
     my ( $self, $path ) = @_;
