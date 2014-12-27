@@ -16,6 +16,12 @@ BEGIN {
     $VERSION = "0.0.1";
 }
 
+=item1 new
+
+Create a new GEDCOM file object. Expects a file name as argument.
+
+=cut
+
 sub new {
     my $this  = shift;
     my $class = ref($this) || $this;
@@ -28,6 +34,12 @@ sub new {
     $self->parse();
     return $self;
 }
+
+=item1 parse
+
+Parse a GEDCOM file.
+
+=cut
 
 sub parse {
     my $self = shift;
@@ -42,10 +54,10 @@ sub parse {
             $line =~ s/\r?\n$//;
 
             if ( $line
-                =~ m/^\s*(\d+)\s+((@[A-Z0-9]+@)\s+)?([A-Z_]{3,6})(\s+(.*))?$/
+                =~ m/^\s*(\d+)\s+(?:(@[A-Z0-9]+@)\s+)?([A-Z_]{3,})(?:\s+(.*))?$/
                 )
             {
-                my ( $level, $id, $tag, $data ) = ( $1, $3, $4, $6 );
+                my ( $level, $id, $tag, $data ) = ( $1, $2, $3, $4 );
 
                 #           print STDERR "lvl $level tag $tag";
                 #           print STDERR " id $id" if ($id);

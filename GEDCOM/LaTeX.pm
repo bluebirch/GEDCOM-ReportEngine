@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-package Gedcom::Report::LaTeX;
+package GEDCOM::LaTeX;
 use warnings;
 use strict;
 use utf8;
@@ -10,23 +10,23 @@ use POSIX qw(locale_h);
 
 BEGIN {
     use Exporter qw();
-    our ($VERSION, @ISA, @EXPORT, @EXPORT_OK, %EXPORT_TAGS);
-    $VERSION = (split m/ /, q$Revision$)[1];
-    @ISA = qw(Exporter);
-    @EXPORT = qw(&begin_document &end_document &maketitle &tableofcontents
-                 &smallcaps &italic &bold
-                 &cdots &ldots
-                 &chapter &section &subsection &subsubsection &paragraph &subparagraph
-                 &p
-                 &begin_table &end_table &tablerow &hline
-                 &begin_numlist &end_numlist &begin_itemlist &end_itemlist
-                 &item
-                 &normal &small &smaller &smallest
-                 &textbreak
-                 &addtoindex &label
-                 &shortplace &reset_shortplace);
+    our ( $VERSION, @ISA, @EXPORT, @EXPORT_OK, %EXPORT_TAGS );
+    $VERSION = ( split m/ /, q$Revision$ )[1];
+    @ISA     = qw(Exporter);
+    @EXPORT  = qw(&begin_document &end_document &maketitle &tableofcontents
+        &smallcaps &italic &bold
+        &cdots &ldots
+        &chapter &section &subsection &subsubsection &paragraph &subparagraph
+        &p
+        &begin_table &end_table &tablerow &hline
+        &begin_numlist &end_numlist &begin_itemlist &end_itemlist
+        &item
+        &normal &small &smaller &smallest
+        &textbreak
+        &addtoindex &label
+        &shortplace &reset_shortplace);
     %EXPORT_TAGS = ();
-    @EXPORT_OK = qw();
+    @EXPORT_OK   = qw();
 }
 
 ### Well, this actually has nothing to do in this module, but I really
@@ -43,13 +43,13 @@ my $LASTPLACE;
 #     return '' unless ($place);
 #     my $short_place = $place;
 #     if ($LASTPLACE) {
-# 	my @last = split m/\s*,\s*/, $LASTPLACE;
-# 	my @cur = split m/\s*,\s*/, $place;
-# 	while ($#cur >= 1 && $#last >= 1 && $last[$#last] eq $cur[$#cur]) {
-# 	    pop @last;
-# 	    pop @cur;
-# 	}
-# 	$short_place = join( ", ", @cur );
+#   my @last = split m/\s*,\s*/, $LASTPLACE;
+#   my @cur = split m/\s*,\s*/, $place;
+#   while ($#cur >= 1 && $#last >= 1 && $last[$#last] eq $cur[$#cur]) {
+#       pop @last;
+#       pop @cur;
+#   }
+#   $short_place = join( ", ", @cur );
 #     }
 #     $LASTPLACE = $place;
 #     return $short_place;
@@ -61,8 +61,8 @@ my $LASTPLACE;
 
 ### BEgin and end document
 
-sub begin_document {  # FIXME: Language should be chosen from
-                      # Locale.pm, not hard-coded here.
+sub begin_document {    # FIXME: Language should be chosen from
+                        # Locale.pm, not hard-coded here.
     return <<END;
 % -*- coding: utf-8 -*-
 \\documentclass[a4paper,12pt,swedish]{report}
@@ -103,11 +103,11 @@ END
 # Title
 
 sub maketitle {
-    my ($title, $author, $date) = @_;
+    my ( $title, $author, $date ) = @_;
     return '' unless ($title);
     my $t = "\\title{$title}\n";
     $t .= "\\author{$author}\n" if ($author);
-    $t .= "\\date{$date}\n" if ($date);
+    $t .= "\\date{$date}\n"     if ($date);
     $t .= "\\maketitle\n\n";
     return $t;
 }
@@ -124,9 +124,11 @@ sub ldots { return '\ldots{}' }
 sub smallcaps {
     return "\\textsc{" . join( '', @_ ) . "}";
 }
+
 sub italic {
     return "\\emph{" . join( '', @_ ) . "}";
 }
+
 sub bold {
     return "\\textbf{" . join( '', @_ ) . "}";
 }
@@ -138,17 +140,18 @@ sub smallest { return "\\tiny{}" }
 # Sectioning
 
 sub _section {
-    my ($type, $text, $optional_text) = @_;
-    return $optional_text ? "\n\\${type}[$optional_text]{$text}\n\n" :
-      "\n\\${type}{$text}\n\n";
+    my ( $type, $text, $optional_text ) = @_;
+    return $optional_text
+        ? "\n\\${type}[$optional_text]{$text}\n\n"
+        : "\n\\${type}{$text}\n\n";
 }
 
-sub chapter       { return _section( "chapter", @_ ); }
-sub section       { return _section( "section", @_ ); }
-sub subsection    { return _section( "subsection", @_ ); }
+sub chapter       { return _section( "chapter",       @_ ); }
+sub section       { return _section( "section",       @_ ); }
+sub subsection    { return _section( "subsection",    @_ ); }
 sub subsubsection { return _section( "subsubsection", @_ ); }
-sub paragraph     { return _section( "paragraph", @_ ); }
-sub subparagraph  { return _section( "subparagraph", @_ ); }
+sub paragraph     { return _section( "paragraph",     @_ ); }
+sub subparagraph  { return _section( "subparagraph",  @_ ); }
 
 # Paragraphing
 
@@ -174,9 +177,11 @@ sub end_table {
 \\LTXtable{\\columnwidth}{tmp.tex}
 END
 }
+
 sub tablerow {
     return join( ' & ', @_ ) . "\\\\\n";
 }
+
 sub hline {
     return "\\hline\n";
 }
@@ -192,7 +197,7 @@ sub end_numlist    { return "\\end{enumerate}\n"; }
 ### Labels and index
 
 sub addtoindex { return "\\index{@_}"; }
-sub label { return "\\label{@_}"; }
+sub label      { return "\\label{@_}"; }
 
 ### Text break stuff
 

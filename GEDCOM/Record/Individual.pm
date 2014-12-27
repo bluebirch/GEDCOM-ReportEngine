@@ -1,26 +1,26 @@
 # -*- coding: utf-8 -*-
 
-=head1 The Gedcom::Report::Record::Individual package
+=head1 The GEDCOM::Record::Individual package
 
 =over 8
 
 =cut
 
-package Gedcom::Report::Record::Individual;
-use base qw(Gedcom::Report::Record);
+package GEDCOM::Record::Individual;
+use base qw(GEDCOM::Record);
 use strict;
 use warnings;
 use utf8;
-use Gedcom::Report::Locale;
-use Gedcom::Report::LaTeX;
+use GEDCOM::Locale;
+use GEDCOM::LaTeX;
 use Data::Dumper;
 
 sub parse {
     my $self = shift;
 
     # Add individual to name index
-    if ($self->{global}) {
-	$self->{global}->{nameindex}->{$self->plainname} = $self;
+    if ( $self->{global} ) {
+        $self->{global}->{nameindex}->{ $self->plainname } = $self;
     }
 
     $self->SUPER::parse;
@@ -29,21 +29,33 @@ sub parse {
 ### NAME
 sub name {
     my $self = shift;
-    return $self->get_value( "NAME" );
+    return $self->get_value("NAME");
 }
+
+=item fullname()
+
+Return full name in markdown format, family name bold and call name italic.
+
+=cut
 
 sub fullname {
     my $self = shift;
     my $name = $self->name;
-    $name =~ s:/(.*?)/:smallcaps( $1 ):ge;
-    $name =~ s:"(.*?)":italic( $1 ):ge;
+    $name =~ s:(\w+?)\*:*$1*:g;
+    $name =~ s:/(.*?)/:uc $1:eg;
     return $name;
 }
+
+=item plainname()
+
+Namn, rensat från all formattering.
+
+=cut
 
 sub plainname {
     my $self = shift;
     my $name = $self->name;
-    $name =~ s:[/"]::g;
+    $name =~ s:[/"*]::g;
     return $name;
 }
 
@@ -85,73 +97,87 @@ sub addnametoindex {
 }
 
 sub lifespan_years {
-    my $self = shift;
-    my $birth = $self->get_record( "BIRT" );
-    my $death = $self->get_record( "DEAT" );
-    if ($birth && $death) {
-	return $birth->year . '--' . $death->year;
+    my $self  = shift;
+    my $birth = $self->get_record("BIRT");
+    my $death = $self->get_record("DEAT");
+    if ( $birth && $death ) {
+        return $birth->year . '--' . $death->year;
     }
     elsif ($birth) {
-	return Ts( "⁎~%(year)", year => $birth->year );
+        return Ts( "⁎~%(year)", year => $birth->year );
     }
     elsif ($death) {
-	return Ts( "†~%(year)", year => $death->year );
+        return Ts( "†~%(year)", year => $death->year );
     }
-    return ""
+    return "";
 }
 
 ### ATTRIBUTES
 
 sub sex {
     my $self = shift;
-    return $self->get_value( 'SEX' );
+    return $self->get_value('SEX');
 }
 
 ### EVENTS
 
+=item event( $tag )
+
+Returnera händelser för $tag som textsträng.
+
+=cut
+
 sub event {
-    my ($self, $tag) = @_;
-    my $t = join( '', map { $_->as_String } $self->get_records( $tag ) );
+    my ( $self, $tag ) = @_;
+    my $t = join( '', map { $_->as_sentence } $self->get_records($tag) );
     return $t;
 }
+
 sub birth {
     my $self = shift;
-    return $self->event( 'BIRT' );
+    return $self->event('BIRT');
 }
+
 sub baptism {
     my $self = shift;
-    return $self->event( 'BAPM' );
+    return $self->event('BAPM');
 }
+
 sub death {
     my $self = shift;
-    return $self->event( 'DEAT' );
+    return $self->event('DEAT');
 }
+
 sub burial {
     my $self = shift;
-    return $self->event( 'BURI' );
+    return $self->event('BURI');
 }
 
 ### FAMILIES
 sub fams {
     my $self = shift;
-    my @fams =  map { $_->reference } $self->get_records( "FAMS" );
+    my @fams = map { $_->reference } $self->get_records("FAMS");
     return @fams;
 }
+
 sub famc {
     my $self = shift;
-    my $famc =  $self->get_record( "FAMC" );
+    my $famc = $self->get_record("FAMC");
     return $famc ? $famc->reference : undef;
 }
+
 sub father {
     my $self = shift;
     my $famc = $self->famc;
     return $famc ? $self->famc->husband : undef;
 }
+
 sub mother {
     my $self = shift;
     my $famc = $self->famc;
     return $famc ? $self->famc->wife : undef;
 }
+
 sub children {
     my $self = shift;
     return map { $_->children } $self->fams;
@@ -160,43 +186,35 @@ sub children {
 ### STRINGS
 
 sub notes {
-    my $self = shift;
-    my %opt = @_;
-    my $t = '';
-    my @notes = $self->get_records( "NOTE" );
+    my $self  = shift;
+    my %opt   = @_;
+    my $t     = '';
+    my @notes = $self->get_records("NOTE");
     if (@notes) {
-	$t .= $opt{heading} if ($opt{heading});
-	for my $i (0..$#notes) {
-	    if ($i > 0) {
-		$t .= textbreak;
-	    }
-	    $t .= $notes[$i]->value . p;
-	}
+        $t .= "$opt{heading}\n\n" if ( $opt{heading} );
+        for my $i ( 0 .. $#notes ) {
+            if ( $i > 0 ) {
+                $t .= "\n\n";
+            }
+            $t .= $notes[$i]->value . "\n";
+        }
     }
+    $t .= "\n" if ($t);
     return $t;
 }
 
-=pod nameheading()
+=item nameheading()
 
-Write the name as heading, using subsection.
+Write the name as a level 3 markdown heading.
 
 =cut
 
 sub nameheading {
     my $self = shift;
-    my $t;
-    if ($self->refn) {
-	$t = subsection( "[" . $self->refn . "] " . $self->fullname,
-			 $self->plainname_year );
-    }
-    else {
-	$t = subsection( $self->fullname, 
-			 $self->plainname_year );
-    }
-    $t .= $self->addnametoindex . label( $self->id );
-    return $t;
+    my $h = $self->refn ? "[" . $self->refn . "] " . $self->fullname : $self->fullname;
+    #$t .= $self->addnametoindex . label( $self->id );
+    return $h . "\n" . "-" x length( $h ) . "\n\n";
 }
-
 
 ### REPORTS
 
@@ -212,31 +230,23 @@ date.
 sub oneliner {
     my $self = shift;
 
-    my $name = $self->plainname_refn;
-    my $birth = $self->get_record_path( "BIRT.DATE" );
-    my $death = $self->get_record_path( "DEAT.DATE" );
-    my $t = '';
-    if ($birth && $death) {
-	$t = Ts( "%(name), ⁎ %(born), † %(dead).",
-		name => $name,
-		born => $birth->as_string,
-		dead => $death->as_string );
+    my $name  = $self->plainname_refn;
+    my $birth = $self->get_record_path("BIRT.DATE");
+    my $death = $self->get_record_path("DEAT.DATE");
+    my $t     = '';
+    if ( $birth && $death ) {
+        $t = sprintf( "%s, ✴ %s, † %s.", $name, $birth->as_string, $death->as_string );
     }
     elsif ($birth) {
-	$t = Ts( "%(name), ⁎ %(born).",
-		 name => $name,
-		 born => $birth->as_string );
+        $t = sprintf( "%s, ✴ %s.", $name, $birth->as_string );
     }
     elsif ($death) {
-	$t = Ts( "%(name), † %(dead).",
-		 name => $name,
-		 dead => $death->as_string );
+        $t = sprintf( "%s, † %s.", $name, $death->as_string );
     }
     else {
-	$t = Ts( "%(name).",
-		 name => $name );
+        $t = sprintf( "%s.", $name );
     }
-    $t .= $self->addnametoindex;
+    #$t .= $self->addnametoindex;
     return $t;
 }
 
@@ -251,56 +261,61 @@ children and an eventes table.
 
 sub summary {
     my $self = shift;
-    my %opt = @_;
+    my %opt  = @_;
 
+    # Vi håller lite koll på vad vi anger för platser. Vi vill nämligen inte
+    # upprepa oss alltför mycket, så senare delen av platsnamnet visas inte om
+    # det upprepas. Den här funktionen nollställer denna "minnesfunktion"
+    # eller vad man skall kalla det.
     $self->reset_places();
 
-    # Name as heading
+    # Börja med att ange namnet som rubrik.
     my $t = $self->nameheading();
 
-    # Relation
+    # Ange först relationen till huvudpersonen, så att säga.
     $t .= ucfirst( decode_relation( $opt{relation} ) ) . '. '
-      if ($opt{relation});
+        if ( $opt{relation} );
 
-    # Just reference if person has already been printed
-    if ($self->{global}->{printed}->{$self->id}) {
-	$t .= T( "See page~" ) . "\\pageref{" . $self->id . "}" . p;
-	return $t;
+    # Just reference if person has already been printed. (Jag vet inte riktigt
+    # hur jag skall göra detta i markdown, men det får bli ett senare
+    # problem.)
+    if ( $self->{global}->{printed}->{ $self->id } ) {
+        $t .= T("See") . " [" . $self->id . "]\n\n";
+        return $t;
     }
 
-    # Birth
+    # Födelse
     $t .= $self->birth();
 
-    # Parents
+    # Föräldrar
     $t .= $self->childof();
 
-    # Family events
-    foreach my $event (@{$self->collect_events( "MARR", "DIV" )}) {
-	$t .= $event->as_String( indi => $self->id );
+    # Familjehändelser
+    foreach my $event ( @{ $self->collect_events( "MARR", "DIV" ) } ) {
+        $t .= $event->as_sentence( indi => $self->id );
     }
 
-    # Death
+    # Död
     $t .= $self->death();
 
-    # New paragraph
-    $t .= p;
+    # Nytt stycke
+    $t .= "\n\n";
 
-    # Children
+    # Barn
     $t .= $self->listofchildren( spouseinfo => $opt{spouseinfo} );
 
-    # Attributes
-    $t .= $self->attributes_table( heading => paragraph( T( "Attributes" ) ) );
-    $t .= p;
+    # Anteckningar
+    $t .= $self->notes( heading => "### Anteckningar" );
+#        if ( $opt{notes} );
 
-    # Events
-    $t .= $self->events_table( heading => paragraph( T( "Chronology" ) ) );
+    # Egenskaper
+    $t .= $self->listofattributes( heading => "### Egenskaper" );
 
-    # Notes
-    $t .= $self->notes( heading => paragraph( T( "Notes" ) ) )
-      if ($opt{notes});
+    # Händelser
+    $t .= $self->listofevents( heading => "### Kronologi" );
 
     # Remember this individual
-    $self->{global}->{printed}->{$self->id} = 1;
+    $self->{global}->{printed}->{ $self->id } = 1;
 
     return $t;
 }
@@ -322,32 +337,25 @@ sub childof {
 
     # Son/daughter/child
     my $child;
-    if ($self->sex eq 'M') {
-	$child = T( "Son" );
+    if ( $self->sex eq 'M' ) {
+        $child = "Son";
     }
-    elsif ($self->sex eq 'F') {
-	$child = T( "Daughter" );
+    elsif ( $self->sex eq 'F' ) {
+        $child = "Dotter";
     }
     else {
-	$child = T( "Child" );
+        $child = "Barn";
     }
 
     my $t = "";
-    if ($father && $mother) {
-	$t = Ts( "%(child) of %(father) and %(mother).",
-		  child => $child,
-		  father => $father->plainname_refn,
-		  mother => $mother->plainname_refn );
+    if ( $father && $mother ) {
+        $t = sprintf( "%s till %s och %s.", $child, $father->plainname_refn, $mother->plainname_refn );
     }
     elsif ($father) {
-	$t = Ts( "%(child) of %(father).",
-		  child => $child,
-		  father => $father->plainname_refn );
+        $t = sprintf( "%s till %s.", $child, $father->plainname_refn );
     }
     elsif ($mother) {
-	$t = Ts( "%(child) of %(mother).",
-		  child => $child,
-		  mother => $mother->plainname_refn );
+        $t = sprintf( "%s till %s.", $child, $mother->plainname_refn );
     }
     $t .= ' ' if ($t);
     return $t;
@@ -363,47 +371,46 @@ Return list of children.
 
 sub listofchildren {
     my $self = shift;
-    my %opt = @_;
+    my %opt  = @_;
 
     my $t = '';
-    # Children
-    my $nchi = 0; # Children counter.
-    foreach my $fam (map { $_->reference } $self->get_records( "FAMS" )) {
-	my @children = $fam->children;
-	if (@children) {
 
-	    # Get spouse
-	    my ($spouse) = grep {$_->id ne $self->id}
-	      grep {$_} ($fam->husband, $fam->wife );
+    # Barn
+    my $nchi = 0;    # Children counter.
+    foreach my $fam ( map { $_->reference } $self->get_records("FAMS") ) {
+        my @children = $fam->children;
+        if (@children) {
 
-	    # Display spouse info
-	    if ($spouse) {
-		if ($opt{spouseinfo}) {
-		    $t .= paragraph( $spouse->fullname );
-		    $t .= $spouse->birth . $spouse->childof . $spouse->death;
-		    $t .= p;
-		    $t .= Ts( "Children of %(person) and %(spouse):",
-			      person => $self->plainname,
-			      spouse => $spouse->plainname );
-		}
-		else {
-		    $t .= Ts( "Children with %(spouse):",
-			      spouse => $spouse->plainname );
-		}
-	    }
-	    else {
-		$t .= Ts( "Children:" );
-	    }
+            # Get spouse
+            my ($spouse) = grep { $_->id ne $self->id }
+                grep {$_} ( $fam->husband, $fam->wife );
 
-	    # Print list of children
-	    $t .= begin_numlist;
-	    $t .= "\\setcounter{enumi}{$nchi}\n";
-	    foreach my $child (@children) {
-		$t .= item( $child->oneliner );
-		$nchi++;
-	    }
-	    $t .= end_numlist . p;
-	}
+            # Display spouse info
+            if ($spouse) {
+                if ( $opt{spouseinfo} ) {
+                    # Rubrik i form av make/makas namn
+                    $t .= "### " . $spouse->fullname . "\n\n";
+                    $t .= $spouse->birth . $spouse->childof . $spouse->death;
+                    $t .= "\n\n";
+                    $t .= sprintf( "Barn till %s och %s", $self->plainname, $spouse->plainname );
+                }
+                else {
+                    $t .= sprintf( "### Barn med %s\n\n", $spouse->plainname );
+                }
+            }
+            else {
+                $t .= "### Barn\n\n";
+            }
+
+            # Print list of children
+            #$t .= begin_numlist;
+            #$t .= "\\setcounter{enumi}{$nchi}\n";
+            #$t .= "\n\n";
+            foreach my $child (@children) {
+                $t .= sprintf( "%2d. ", ++$nchi ) . $child->oneliner . "\n";
+            }
+            $t .= "\n";
+        }
     }
     return $t;
 }
@@ -438,48 +445,76 @@ sub descendants_report {
 
 =item _report( $type, $max_generations )
 
-Return a report containing ancestors.
+Return a report containing ancestors or descendants.
 
 =cut
 
 sub _report {
     my $self = shift;
     my $type = shift;
-    my %opt = @_;
+    my %opt  = @_;
 
-    my $sub = 'make_' . $type . '_tree';
-    my $type_refn = $type . '_refn';
+    # Här kommer några variabler som jag knappt vet vad de gör. Den första
+    # tror jag har att göra med vilken typ av träd som skall byggas; ett anrop
+    # till aktuell sub kommer nog senare. Den andra har något med numreringen
+    # av personer i trädet att göra. Den tredje anger det maximala antalet
+    # generationer i trädet.
+    my $sub         = 'make_' . $type . '_tree';
+    my $type_refn   = $type . '_refn';
     my $generations = $opt{generations} ? $opt{generations} : 10;
 
+    # Detta är en flagga som anger huruvida vi skall skriva ut information om
+    # make/maka i trädet. Det gör vi i stamtavlor, men inte i antavlor.
     my $spouseinfo = 0;
 
+    # Ja, men titta, här är ju anropet till trädkonstruktionssubrutinen i
+    # fråga. Här bygger vi alltså upp det träd som sedemera skall rapporteras,
+    # generation för generation.
     $self->$sub( generations => $generations )
-      unless ($self->{$type});
+        unless ( $self->{$type} );
 
-    # Connect global reference number table with this tree.
+    # "Connect global reference number table with this tree." -- Det här vet
+    # jag faktiskt inte vad det betyder. Det var länge sedan jag skrev den här
+    # koden.
     $self->{global}->{refn} = $self->{$type_refn};
 
-    my $t;
-    if ($type eq 'ancestors') {
-	$t = chapter( Ts( "Ancestors of %(name)", name => $self->plainname ) );
+    # I variabeln $t lagras hela den textsträng som skall bli ett markdown-
+    # dokument. Vi börjar med att ange dokumentets titel. Det gör vi i ett
+    # YAML-block i början av dokumentet.
+    my $t = "---\ntitle: ";
+
+    # Titeln blir lite olika beroende på vad det är för typ av rapport som skapas.
+    if ( $type eq 'ancestors' ) {
+        $t .= "Antavla för " . $self->plainname;
     }
-    elsif ($type eq 'descendants') {
-	$t = chapter( Ts( "Descendants of %(name)", name => $self->plainname ) );
-	$spouseinfo = 1;
+    elsif ( $type eq 'descendants' ) {
+        $t .= "Stamtavla för " . $self->plainname;
+        $spouseinfo = 1;
     }
     else {
-	$t = chapter( Ts( "Genealogy report for %(name)", name => $self->plainname ) );
+        $t .= "Rapport för " . $self->plainname;
     }
 
-    for my $generation (0..$#{$self->{$type}}) {
-	$t .= section( "Generation " . sprintf( '%d', $generation+1 ) ); # Heading
+    # Avsluta YAML-blocket (egentligen skall det väl in datum och grejor här).
+    $t .= "\n...\n\n";
 
-	foreach my $i (@{$self->{$type}->[$generation]}) {
-	    $t .= $i->summary( spouseinfo => $spouseinfo,
-			       notes => $opt{notes},
-			       relation => $self->{relation}->{$i->xref}
-			     );
-	}
+    # Stega igenom rapporten, generation för generation.
+    for my $generation ( 0 .. $#{ $self->{$type} } ) {
+
+        # Sätt en rubrik. Vi gör en läsvänlig markdown-rubrik.
+        my $heading = ucfirst( sprintf( "%s generationen", ordinal( $generation + 1 ) ) );
+        $t .= $heading . "\n";
+        $t .= "=" x length( $heading ) . "\n\n";
+
+        # Och så rapporterar vi varje individ. Det gör vi i funktionen
+        # 'summary', som uppenbarligen anropas härifrån.
+        foreach my $i ( @{ $self->{$type}->[$generation] } ) {
+            $t .= $i->summary(
+                spouseinfo => $spouseinfo,
+                notes      => $opt{notes},
+                relation   => $self->{relation}->{ $i->xref }
+            );
+        }
     }
     return $t;
 }
@@ -494,65 +529,65 @@ Build an internal structure of ancestors for each generation.
 
 sub make_ancestors_tree {
     my $self = shift;
-    my %opt = @_;
+    my %opt  = @_;
 
     # Maximum generations defaults to 10.
     my $max_generations = $opt{generations} ? $opt{generations} : 10;
 
     # Array-of-Array with generations and individuals. Every
     # generation holds the parents of previous generation.
-    @{$self->{ancestors}} = ( [ $self ] );
+    @{ $self->{ancestors} } = ( [$self] );
 
     # The beginning person gets reference number 1.
-    $self->{ancestors_refn}->{$self->id} = 1;
+    $self->{ancestors_refn}->{ $self->id } = 1;
 
     # Step through all individuals in generation $generation and add
     # their parents to $generation+1.
     my $generation = 0;
-    my $refn = 2;
-    my $parents; # Holds list of parents.
+    my $refn       = 2;
+    my $parents;    # Holds list of parents.
     do {
-	$parents = [];
-	foreach my $indi (@{$self->{ancestors}->[$generation]}) {
-	    if ($indi->father) {
-		push @$parents, $indi->father;
+        $parents = [];
+        foreach my $indi ( @{ $self->{ancestors}->[$generation] } ) {
+            if ( $indi->father ) {
+                push @$parents, $indi->father;
 
-		# Father gets number 2n
-		$self->{ancestors_refn}->{$indi->father->id} =
-		  $self->{ancestors_refn}->{$indi->id} * 2;
+                # Father gets number 2n
+                $self->{ancestors_refn}->{ $indi->father->id }
+                    = $self->{ancestors_refn}->{ $indi->id } * 2;
 
-		# Store relation
-		$self->set_parental_relation( $indi, $indi->father );
-	    }
-	    if ($indi->mother) {
-		push @$parents, $indi->mother;
+                # Store relation
+                $self->set_parental_relation( $indi, $indi->father );
+            }
+            if ( $indi->mother ) {
+                push @$parents, $indi->mother;
 
-		# Mother gets number 2n+1
-		$self->{ancestors_refn}->{$indi->mother->id} =
-		  $self->{ancestors_refn}->{$indi->id} * 2 + 1;
+                # Mother gets number 2n+1
+                $self->{ancestors_refn}->{ $indi->mother->id }
+                    = $self->{ancestors_refn}->{ $indi->id } * 2 + 1;
 
-		# Store relation
-		$self->set_parental_relation( $indi, $indi->mother );
-	    }
-	}
+                # Store relation
+                $self->set_parental_relation( $indi, $indi->mother );
+            }
+        }
 
-	# Add list of parents to the list of ancestors.
-	$generation++;
-	$self->{ancestors}->[$generation] = $parents if (@$parents);
-    } while (@$parents && $generation < $max_generations-1);
+        # Add list of parents to the list of ancestors.
+        $generation++;
+        $self->{ancestors}->[$generation] = $parents if (@$parents);
+    } while ( @$parents && $generation < $max_generations - 1 );
 }
 
 sub set_parental_relation {
-    my ($self, $person, $parent) = @_;
-    my $relation = $self->{relation}->{$person->xref};
+    my ( $self, $person, $parent ) = @_;
+    my $relation = $self->{relation}->{ $person->xref };
     $relation = "" unless ($relation);
-    if ($parent->sex eq 'M') {
-	$relation .= 'F';
+    if ( $parent->sex eq 'M' ) {
+        $relation .= 'F';
     }
-    elsif ($parent->sex eq 'F') {
-	$relation .= 'M';
+    elsif ( $parent->sex eq 'F' ) {
+        $relation .= 'M';
     }
-    $self->{relation}->{$parent->xref} = $relation;
+    $self->{relation}->{ $parent->xref } = $relation;
 }
 
 =pod
@@ -565,44 +600,44 @@ Build an internal structure of descendants for each generation.
 
 sub make_descendants_tree {
     my $self = shift;
-    my %opt = @_;
+    my %opt  = @_;
 
     # Maximum generations defaults to 10
     my $max_generations = $opt{generations} ? $opt{generations} : 10;
 
     # Array-of-Array with generations and individuals. Each individual
     # holds the children to the individuals in previous generation.
-    @{$self->{descendants}} = ( [ $self ] );
+    @{ $self->{descendants} } = ( [$self] );
 
     # The beginning person gets reference number 1.
-    $self->{descendants_refn}->{$self->id} = 1;
+    $self->{descendants_refn}->{ $self->id } = 1;
 
     # Step through all individuals in generation $generation and add
     # their children to $generation+1.
     my $generation = 0;
-    my $refn = 2;
-    my $children; # Hold list of children
+    my $refn       = 2;
+    my $children;    # Hold list of children
     do {
-	$children = [];
-	foreach my $indi (@{$self->{descendants}->[$generation]}) {
-	    my @children = $indi->children;
-	    if (@children) {
-		# Lägg barnen till aktuell lista för generation x. Ta
-		# bara med de barn som själva har barn.
-#		push @$chil, grep { $_->children } @children;
-		push @$children, @children;
-	    }
-	}
+        $children = [];
+        foreach my $indi ( @{ $self->{descendants}->[$generation] } ) {
+            my @children = $indi->children;
+            if (@children) {
 
-	# Add numbers
-	if (@$children) {
-	    foreach my $indi (@$children) {
-		$self->{descendants_refn}->{$indi->id} = $refn++;
-	    }
-	    $self->{descendants}->[++$generation] = $children;
-	}
-    } while (@$children && $generation < $max_generations);
+                # Lägg barnen till aktuell lista för generation x. Ta
+                # bara med de barn som själva har barn.
+                #       push @$chil, grep { $_->children } @children;
+                push @$children, @children;
+            }
+        }
+
+        # Add numbers
+        if (@$children) {
+            foreach my $indi (@$children) {
+                $self->{descendants_refn}->{ $indi->id } = $refn++;
+            }
+            $self->{descendants}->[ ++$generation ] = $children;
+        }
+    } while ( @$children && $generation < $max_generations );
 }
-
 
 1;
