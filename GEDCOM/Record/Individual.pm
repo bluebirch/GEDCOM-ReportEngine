@@ -60,7 +60,13 @@ sub plainname {
 
 sub plainname_refn {
     my $self = shift;
-    return $self->plainname . $self->refnp;
+    my $refn = $self->refnp;
+    if ($refn) {
+        return "[" . $self->plainname . $refn . "](#" . $self->xref . ")";
+    }
+    else {
+        return $self->plainname;
+    }
 }
 
 sub plainname_year {
