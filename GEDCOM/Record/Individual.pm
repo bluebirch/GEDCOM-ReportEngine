@@ -222,33 +222,6 @@ sub children {
 =head2 Strings
 =over 4
 
-=item notes()
-
-Notes, as stored in NOTE records.
-
-When thinking of it, I guess this method should go into GEDCOM::Records; there
-are notes in other places as well.
-
-=cut
-
-sub notes {
-    my $self  = shift;
-    my %opt   = @_;
-    my $t     = '';
-    my @notes = $self->get_records("NOTE");
-    if (@notes) {
-        $t .= "$opt{heading}\n\n" if ( $opt{heading} );
-        for my $i ( 0 .. $#notes ) {
-            if ( $i > 0 ) {
-                $t .= "\n\n";
-            }
-            $t .= $notes[$i]->value . "\n";
-        }
-    }
-    $t .= "\n" if ($t);
-    return $t;
-}
-
 =item nameheading()
 
 Write the name as a level 3 markdown heading.
