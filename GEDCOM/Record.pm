@@ -215,11 +215,12 @@ All GEDCOM tags and their names. In Swedish.
 =back
 
 =head2 Class Constructor
+
 =over 4
 
-=item new( $level, $tag, $id, $value, $global )
+=item C<new( $level, $tag, $id, $value, $global )>
 
-Create a new record of type C<$tag> at level C<$level> with @XREF@ C<$id> (if
+Create a new record of type C<$tag> at level C<$level> with C<@XREF@> C<$id> (if
 available) and value C<$value> (if available). The C<$global> structure should
 be explained somewhere.
 
@@ -295,7 +296,7 @@ sub parse {
 
 =back
 
-=head2 Data Access Methods
+=head2 Subrecord Access Methods
 
 =over 4
 
@@ -326,7 +327,7 @@ sub get_record {
     return $record;
 }
 
-=item get_records( $tag )
+=item C<get_records( $tag )>
 
 Return subrecords of type $tag. In scalar mode, return the first subrecord
 only.
@@ -344,7 +345,17 @@ sub get_records {
     return wantarray ? @records : ( $records[0] || undef );
 }
 
-##############################################################################
+=back
+
+=head2 Data Access Methods
+
+=over 4
+
+=item C<value()>
+
+Return record value (if any). Concatenate subrecords automatically.
+
+=cut
 
 sub value {
     my $self = shift;
@@ -362,25 +373,59 @@ sub value {
     return $value;
 }
 
+=item C<as_string()>
+
+In this base class, this is simply a call to C<$self->value()>. Subclasses
+might do other things.
+
+=cut
+
 sub as_string {
     my $self = shift;
     return $self->value;
 }
+
+=item C<as_sentence()>
+
+Return C<as_string()> with leading capital letter and ending full stop, thus
+making it 'sentence-like'.
+
+=cut
 
 sub as_sentence {
     my $self = shift;
     return uc( $self->value ) . '. ';
 }
 
+=item C<tag()>
+
+Return the GEDCOM tag (record type) for this record.
+
+=cut
+
 sub tag {
     my $self = shift;
     return $self->{tag} ? $self->{tag} : '';
 }
 
+=item C<tagname()>
+
+Return the GEDCOM tag (record type) in readable format; this is where the
+global variable C<%TAGNAME> is used.
+
+=cut
+
 sub tagname {
     my $self = shift;
     return $TAGNAME{ $self->tag } ? $TAGNAME{ $self->tag } : $self->tag;
 }
+
+=item C<id()>
+
+Return the GEDCOM xref id, with C<@>-characters stripped. A synonym for this
+function is C<xref()> (see below).
+
+=cut
 
 sub id {
     my $self = shift;
@@ -392,6 +437,33 @@ sub id {
     return '';
 }
 
+=item C<xref()>
+
+Simply a call to C<id()> (see above), but aligns with proper GEDCOM
+terminology.
+
+=cut
+
+sub xref {
+    my $self = shift;
+    return $self->id;
+}
+
+=back
+
+=head2 Internal Reference Numbers
+
+=over 4
+
+=item C<refn()>
+
+Internal reference number, if it exists. These are set by
+C<GEDCOM::Record::Individual->make_ancestors_tree> and
+C<GEDCOM::Record::Individual->make_descendatns_tree>. Before building either
+tree, this methods returns nothing.
+
+=cut
+
 sub refn {
     my $self = shift;
     return
@@ -402,29 +474,57 @@ sub refn {
         : '';
 }
 
+=item C<refnp()>
+
+As C<refn()> above, but add brackets, like: "[4]".
+
+This is perhaps where I should add internal references.
+
+=cut
+
 sub refnp {
     my $self = shift;
     return $self->refn ? " [" . $self->refn . "]" : '';
 }
 
-sub xref {
-    my $self = shift;
-    return $self->id;
-}
+=back
 
-=item reference()
+=head2 References to Other Records
+
+=over 4
+
+=item C<dereference()>, C<reference()>
 
 Check if record is a reference to another record. In that case,
 return the referenced record.
 
-This should perhaps be called "dereference" for clarity...
+C<reference()> is an deprecated name that should be replaced with calls to
+C<dereference()>.
 
 =cut
 
-sub reference {
+sub dereference {
     my $self = shift;
     return $self->{global}->{xref}->{ $self->value };
 }
+
+sub reference {
+    my $self = shift;
+    print STDERR "call to reference() is deprecated, use dereference() instead\n";
+    return $self->dereference();
+}
+
+=back
+
+=head2 Sorting
+
+=over 4
+
+=item C<sortkey()>
+
+Return sort key, for sorting events.
+
+=cut
 
 # Create and return sort key
 sub sortkey {
@@ -443,25 +543,16 @@ sub sortkey {
     return $self->{sortkey};
 }
 
-##############################################################################
+=back
 
-# sub get_path {
-#     my ($self, @path) = @_;
-#     return '' unless (@path);
-#     @path = map( split( m/\./, $_ ), @path );
-#     my $tag = shift @path;
-#     if (@path) {
-#   return map( $_->get_path( @path ), $self->get_record( $tag ) );
-#     }
-#     else {
-#   return $self->get_value( $tag );
-#     }
-# }
+=head2 Subrecord Paths
 
-=item get_record_path( $tag_path )
+=over 4
 
-Return records for specified subrecord path, for example FAM.MARR or
-FILE.TITL.
+=item C<get_record_path( $tag_path )>
+
+Return records for specified subrecord path, for example C<FAM.MARR> or
+C<FILE.TITL>.
 
 =cut
 
@@ -489,7 +580,7 @@ sub get_record_path {
     return wantarray ? @res : ( $res[0] || '' );
 }
 
-=item get_value_path ()
+=item C<get_value_path ()>
 
 Return values from specified subrecord path (see get_value_record above).
 
@@ -501,11 +592,24 @@ sub get_value_path {
     return wantarray ? @res : ( $res[0] || '' );
 }
 
+=item C<get_string()>
+
+Like C<get_value_path()>, but returns C<as_string()> from subrecords instead
+of C<value()>.
+
+=cut
+
 sub get_string {
     my $self = shift;
     my @res = map( $_->as_string, $self->get_record_path(@_) );
     return ( $res[0] || '' );
 }
+
+=item C<get_strings()>
+
+Like C<get_string()>, but returns multiple subrecords.
+
+=cut
 
 sub get_strings {
     my $self = shift;
@@ -513,14 +617,34 @@ sub get_strings {
     return wantarray ? @res : ( $res[0] || '' );
 }
 
-### RESET PLACE MEMORY (see Place.pm)
+=back
+
+=head2 Place Handling
+
+=over 4
+
+=item C<reset_places()>
+
+Reset place memory (see C<GEDCOM::Record::Place>).
+
+=cut
 
 sub reset_places {
     my $self = shift;
     $self->{global}->{lastplace} = undef;
 }
 
-### HANDLE SUBRECORDS AND PARENTS
+=back
+
+=head2 Subrecords and Parent Records
+
+=over 4
+
+=item C<add_subrecord( $record )>
+
+Add C<$record> as subrecord of this record.
+
+=cut
 
 sub add_subrecord {
     my ( $self, $subrecord ) = @_;
@@ -536,6 +660,12 @@ sub add_subrecord {
 
 }
 
+=item C<parent()>
+
+Return parent record, that is, the record of which this record is a subrecord.
+
+=cut
+
 sub parent {
     my $self = shift;
     return $self->{parent};
@@ -547,11 +677,13 @@ sub parent {
 #     return 1;
 # }
 
-### Event handling.
+=back
 
-=pod
+=head2 Events, Attributes, Media
 
-=item collect_events( @events )
+=over 4
+
+=item C<collect_events( @events )>
 
 Collect events specified in the @events array, including family
 events. If no events are specified, all events are collected.
@@ -577,9 +709,7 @@ sub collect_events {
     return \@events;
 }
 
-=pod
-
-=item collect_attributes( @attributes )
+=item C<collect_attributes( @attributes )>
 
 Collect attributes specified in the @attributes array.  If no
 attributes are specified, all attributes are collected.
@@ -598,11 +728,9 @@ sub collect_attributes {
     return \@attributes;
 }
 
-=pod
+=item C<listofevents()>
 
-=item listofevents()
-
-Gör en numrerad lista med händelser, i kronologisk ordning.
+Return a numbered markdown list of events, sorted by date.
 
 =cut
 
@@ -641,11 +769,9 @@ sub listofevents {
     return $t;
 }
 
-=pod
+=item C<listofattributes()>
 
-=item listofattributes()
-
-Return attributes as a table.
+Return attributes as an unnumbered markdown list.
 
 =cut
 
@@ -669,7 +795,40 @@ sub listofattributes {
     return $t;
 }
 
-### Source strings.
+=item C<inline_images()>
+
+Return markdown inline images (pandoc implicit figures) for all media
+associated with this record.
+
+=cut
+
+sub inline_images {
+    my $self = shift;
+    my $t = "";
+
+    # Find and dereference media objects (if any)
+    my @media = map { $_->reference } $self->get_records( 'OBJE');
+
+    # Add media objects as implicit figures (pandoc markdown only).
+    foreach my $media (@media) {
+        unless ($media->printed) {
+            $t .= $media->inline_image . "\n\n";
+        }
+    }
+    return $t;
+}
+
+=back
+
+=head2 GEDCOM Source
+
+=over 4
+
+=item C<as_source()>
+
+Return record as a valid GEDCOM source line. Recursive call to subrecords.
+
+=cut
 
 sub as_source {
     my $self = shift;
@@ -679,6 +838,12 @@ sub as_source {
     }
     return $t;
 }
+
+=item C<sourceline()>
+
+Called from C<as_source()>.
+
+=cut
 
 sub sourceline {
     my $self = shift;
@@ -691,8 +856,6 @@ sub sourceline {
 }
 
 =back
-
-End of file.
 
 =cut
 

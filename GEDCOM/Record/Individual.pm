@@ -340,8 +340,11 @@ sub summary {
     # Nytt stycke
     $t .= "\n\n";
 
+    # Images
+    $t .= $self->inline_images;
+
     # Barn
-    $t .= $self->listofchildren( spouseinfo => $opt{spouseinfo} );
+    $t .= $self->listofchildren( spouseinfo => $opt{spouseinfo}, images => 1 );
 
     # Anteckningar
     $t .= $self->notes( heading => "### Anteckningar" );
@@ -352,20 +355,6 @@ sub summary {
 
     # Händelser
     $t .= $self->listofevents( heading => "### Kronologi" );
-
-    # Dereference media objects (if any)
-    my @media = map { $_->reference } $self->get_records( 'OBJE');
-
-    # Add media objects as implicit figures (pandoc markdown only).
-    foreach my $media (@media) {
-
-        # print media if it was not already printed
-        if (!$self->{global}->{printed}->{ $media->id }) {
-            $t .= "![" . $media->title . "](" . $media->file . ")\n\n";
-            # Remember that this media has already been printed.
-            $self->{global}->{printed}->{ $media->id } = 1;
-        }
-    }
 
     # Remember this individual
     $self->{global}->{printed}->{ $self->id } = 1;
@@ -463,6 +452,9 @@ sub listofchildren {
                 $t .= sprintf( "%2d. ", ++$nchi ) . $child->oneliner . "\n";
             }
             $t .= "\n";
+
+            # Print media (if exists)
+            $t .= $fam->inline_images if ($opt{images});
         }
     }
     return $t;
