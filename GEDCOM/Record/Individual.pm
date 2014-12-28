@@ -133,29 +133,30 @@ Returnera händelser för $tag som textsträng.
 =cut
 
 sub event {
-    my ( $self, $tag ) = @_;
-    my $t = join( '', map { $_->as_sentence } $self->get_records($tag) );
+    my $self = shift;
+    my $tag = shift;
+    my $t = join( '', map { $_->as_sentence( @_ ) } $self->get_records($tag) );
     return $t;
 }
 
 sub birth {
     my $self = shift;
-    return $self->event('BIRT');
+    return $self->event('BIRT', @_ );
 }
 
 sub baptism {
     my $self = shift;
-    return $self->event('BAPM');
+    return $self->event('BAPM', @_ );
 }
 
 sub death {
     my $self = shift;
-    return $self->event('DEAT');
+    return $self->event('DEAT', @_ );
 }
 
 sub burial {
     my $self = shift;
-    return $self->event('BURI');
+    return $self->event('BURI', @_ );
 }
 
 =back
@@ -331,18 +332,24 @@ sub summary {
     }
 
     # Födelse
-    $t .= $self->birth();
+    $t .= $self->birth( nosource => 1 );
 
     # Föräldrar
     $t .= $self->childof();
 
     # Familjehändelser
     foreach my $event ( @{ $self->collect_events( "MARR", "DIV" ) } ) {
-        $t .= $event->as_sentence( indi => $self->id );
+        $t .= $event->as_sentence( indi => $self->id, nosource => 1 );
     }
 
     # Död
-    $t .= $self->death();
+    $t .= $self->death( nosource => 1);
+
+    # Remove trailing spaces
+    $t =~ s/\s+$//s;
+
+    # Sources
+    $t .= $self->sources_footnote;
 
     # Nytt stycke
     $t .= "\n\n";
@@ -358,7 +365,7 @@ sub summary {
 #        if ( $opt{notes} );
 
     # Egenskaper
-    $t .= $self->listofattributes( heading => "### Egenskaper" );
+    $t .= $self->listofattributes( heading => "### Fakta" );
 
     # Händelser
     $t .= $self->listofevents( heading => "### Kronologi" );
@@ -568,6 +575,10 @@ sub _report {
             );
         }
     }
+
+    # Last, but not least, print all footnotes
+    $t .= $self->footnotes;
+
     return $t;
 }
 

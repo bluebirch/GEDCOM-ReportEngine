@@ -17,6 +17,7 @@ use GEDCOM::Record::Place;
 use GEDCOM::Record::Individual;
 use GEDCOM::Record::Family;
 use GEDCOM::Record::Object;
+use GEDCOM::Record::Source;
 use Data::Dumper;
 
 our @EVENTS;
@@ -260,6 +261,9 @@ sub new {
     }
     elsif ( $tag eq 'OBJE' && $level == 0) {
          $class .= '::Object';
+    }
+    elsif ( $tag eq 'SOUR' && $level == 0) {
+         $class .= '::Source';
     }
     elsif ( grep m/$tag/, @EVENTS ) {
         $class .= '::Event';
@@ -510,7 +514,7 @@ sub dereference {
 
 sub reference {
     my $self = shift;
-    print STDERR "call to reference() is deprecated, use dereference() instead\n";
+    #print STDERR "call to reference() is deprecated, use dereference() instead\n";
     return $self->dereference();
 }
 
@@ -679,7 +683,7 @@ sub parent {
 
 =back
 
-=head2 Events, Attributes, Media
+=head2 Events, Attributes, Media, Sources
 
 =over 4
 
@@ -814,6 +818,91 @@ sub inline_images {
         unless ($media->printed) {
             $t .= $media->inline_image . "\n\n";
         }
+    }
+    return $t;
+}
+
+=item C<sources()>
+
+Return sources of this record, in markdown format. A typical source reference
+might look like this:
+
+    1 SOUR @XREF@
+    2 PAGE <text>
+    2 DATA
+    3 TEXT <text>
+
+For now, I'll only dereference the C<SOUR> pointer and deal with C<PAGE>.
+
+=cut
+
+sub sources {
+    my $self = shift;
+
+    my $t = "";
+
+    my @sour = $self->get_records( 'SOUR' );
+
+    foreach my $sour (@sour) {
+        $t .= "; " if ($t);
+        $t .= $sour->dereference->as_string;
+        my $page = $sour->get_value( 'PAGE' );
+        if ($page) {
+            # reformat page references
+            $page =~ s/Sida:/s./gi;
+            $page =~ s/Vol(?:ym)?:/vol./gi;
+            $page =~ s/(\w+):/lc $1/ge;
+            $page =~ s/(?<=\d)-(?=\d)/--/g;
+            $t .= ", ". $page;
+        }
+    }
+    $t .= "." if ($t);
+    return $t;
+}
+
+=item C<sources_footnote()>
+
+Return source references as markdown footnote. Footnote texts are stored globally.
+
+=cut
+
+sub sources_footnote {
+    my $self = shift;
+
+    my $t = $self->sources;
+
+    return $self->footnote( $t );
+}
+
+=item C<footnote( $text )>
+
+Add a markdown footnote reference. The footnote text is stored internally in
+C<$self->{global}->{footnotes}> and it is imperative that this is printed at
+the end of any markdown document.
+
+=cut
+
+sub footnote {
+    my ($self, $text) = @_;
+    if ($text) {
+        push @{$self->{global}->{footnotes}}, $text;
+        return "[^" . $#{$self->{global}->{footnotes}} . "]";
+    }
+    return "";
+}
+
+=item C<footnotes()>
+
+Return all footnotes.
+
+=cut
+
+sub footnotes {
+    my $self = shift;
+
+    my $t = "";
+    for my $i (0..$#{$self->{global}->{footnotes}}) {
+        $t .= "[^" . $i . "]: " . $self->{global}->{footnotes}->[$i] . "\n\n";
     }
     return $t;
 }

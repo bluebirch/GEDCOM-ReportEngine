@@ -10,8 +10,6 @@ use base qw(GEDCOM::Record);
 use strict;
 use warnings;
 use utf8;
-use GEDCOM::Locale;
-use GEDCOM::LaTeX;
 
 # move the following to Record.pm
 
@@ -87,36 +85,32 @@ sub as_string {
 
     my $t;
     if ( $date && $place ) {
-        $t = Ts(
-            "%(attribute) in %(place) (%(date))",
-            attribute => $attribute,
-            date      => $date,
-            place     => $place
-        );
+        $t = sprintf( "%s i %s (%s)", $attribute, $date, $place );
     }
     elsif ($place) {
-        $t = Ts(
-            "%(attribute) in %(place)",
-            attribute => $attribute,
-            place     => $place
-        );
+        $t = sprintf( "%s i %s", $attribute, $place );
     }
     elsif ($date) {
-        $t = Ts(
-            "%(attribute) (%(date))",
-            attribute => $attribute,
-            date      => $date
-        );
+        $t = sprintf( "%s (%s)", $attribute, $date );
     }
     else {
-        $t = Ts( "%(attribute)", attribute => $attribute );
+        $t = sprintf( "%s", $attribute );
     }
     return $t;
 }
 
 sub as_sentence {
     my $self = shift;
-    return ucfirst( $self->as_string(@_) ) . '. ';
+    my %opt = @_;
+
+    my $t = ucfirst( $self->as_string(@_) ) . '.';
+
+    # Add sources
+    $t .= $self->sources_footnote unless ($opt{nosource});
+
+    $t .= " ";
+
+    return $t;
 }
 
 1;

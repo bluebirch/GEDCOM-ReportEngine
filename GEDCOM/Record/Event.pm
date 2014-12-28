@@ -10,8 +10,6 @@ use base qw(GEDCOM::Record);
 use strict;
 use warnings;
 use utf8;
-use GEDCOM::Locale;
-use GEDCOM::LaTeX;
 
 ### DATES OF EVENT
 
@@ -130,6 +128,7 @@ sub as_string {
     else {
         $t = $self->name;
     }
+
     return $t;
 }
 
@@ -141,7 +140,16 @@ Returnera händelse som mening med korrekt satsbyggnad.
 
 sub as_sentence {
     my $self = shift;
-    return ucfirst( $self->as_string(@_) ) . '. ';
+    my %opt = @_;
+
+    my $t = ucfirst( $self->as_string(@_) ) . '.';
+
+    # Add sources
+    $t .= $self->sources_footnote unless ($opt{nosource});
+
+    $t .= " ";
+
+    return $t;
 }
 
 1;
