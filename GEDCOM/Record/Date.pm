@@ -1,11 +1,11 @@
+package GEDCOM::Record::Date;
 
-=head1 The GEDCOM::Record::Date package
+=head1 GEDCOM::Record::Date
 
 =over 8
 
 =cut
 
-package GEDCOM::Record::Date;
 use base qw(GEDCOM::Record);
 use strict;
 use warnings;

@@ -1,13 +1,12 @@
-=pod
+package GEDCOM::Record::Place;
 
-=head GEDCOM::Record::Place
+=head1 GEDCOM::Record::Place
 
 This package is a subclass of GEDCOM::Record and includes special handling of
 places and names of places.
 
 =cut
 
-package GEDCOM::Record::Place;
 use base qw(GEDCOM::Record);
 use strict;
 use warnings;

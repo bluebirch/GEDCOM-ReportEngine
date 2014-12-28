@@ -1,12 +1,11 @@
-# -*- coding: utf-8 -*-
+package GEDCOM::Record::Individual;
 
-=head1 The GEDCOM::Record::Individual package
+=head1 GEDCOM::Record::Individual
 
 =over 8
 
 =cut
 
-package GEDCOM::Record::Individual;
 use base qw(GEDCOM::Record);
 use strict;
 use warnings;
@@ -153,12 +152,33 @@ sub burial {
     return $self->event('BURI');
 }
 
-### FAMILIES
+=back
+
+=head2 Families
+
+=over 4
+
+=item fams()
+
+Families that this individual is a spouse in. The records are automatically
+dereferenced.
+
+=cut
+
 sub fams {
     my $self = shift;
     my @fams = map { $_->reference } $self->get_records("FAMS");
     return @fams;
 }
+
+=item famc()
+
+Families this individual is a child of. This should usually only be one, but I
+guess there can be cases of adoptive children and so on; I currently only
+return ONE record, which might be a problem in the future. I<This is a
+potential bug!>
+
+=cut
 
 sub famc {
     my $self = shift;
@@ -166,16 +186,24 @@ sub famc {
     return $famc ? $famc->reference : undef;
 }
 
+=item father()
+=item mother()
+=item children()
+
+Fairly straightforward what they do, I guess.
+
+=cut
+
 sub father {
     my $self = shift;
     my $famc = $self->famc;
-    return $famc ? $self->famc->husband : undef;
+    return $famc ? $famc->husband : undef;
 }
 
 sub mother {
     my $self = shift;
     my $famc = $self->famc;
-    return $famc ? $self->famc->wife : undef;
+    return $famc ? $famc->wife : undef;
 }
 
 sub children {
@@ -183,7 +211,18 @@ sub children {
     return map { $_->children } $self->fams;
 }
 
-### STRINGS
+=back
+=head2 Strings
+=over 4
+
+=item notes()
+
+Notes, as stored in NOTE records.
+
+When thinking of it, I guess this method should go into GEDCOM::Records; there
+are notes in other places as well.
+
+=cut
 
 sub notes {
     my $self  = shift;
@@ -406,7 +445,7 @@ sub listofchildren {
                     $t .= "### " . $spouse->fullname . "\n\n";
                     $t .= $spouse->birth . $spouse->childof . $spouse->death;
                     $t .= "\n\n";
-                    $t .= sprintf( "Barn till %s och %s", $self->plainname, $spouse->plainname );
+                    $t .= sprintf( "Barn till %s och %s:\n\n", $self->plainname, $spouse->plainname );
                 }
                 else {
                     $t .= sprintf( "### Barn med %s\n\n", $spouse->plainname );

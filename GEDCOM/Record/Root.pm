@@ -1,12 +1,11 @@
-=pod
+package GEDCOM::Record::Root;
 
-=head The GEDCOM::Record::Root package
+=head1 GEDCOM::Record::Root
 
 Honestly, I don't know what or why.
 
 =cut
 
-package GEDCOM::Record::Root;
 use base qw(GEDCOM::Record);
 use strict;
 use warnings;

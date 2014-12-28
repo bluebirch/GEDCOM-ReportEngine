@@ -1,10 +1,14 @@
-# -*- coding: utf-8 -*-
 package GEDCOM::Record;
+
+=head1 GEDCOM::Record
+
+The base class for all types of GEDCOM records.
+
+=cut
+
 use strict;
 use locale;
 use utf8;
-use GEDCOM::Locale;
-use GEDCOM::LaTeX;
 use GEDCOM::Record::Root;
 use GEDCOM::Record::Date;
 use GEDCOM::Record::Event;
@@ -20,13 +24,43 @@ our @ATTRIBUTES;
 our %EVENTDESC;
 our %TAGNAME;
 
-#INIT {
+=head2 Global Variables
+
+=over 4
+
+=item C<@EVENTS>
+
+The C<@EVENTS> variable holds a list of all record types that should be
+regarded as events. They are parsed as the subclass C<GEDCOM::Record::Event>.
+
+See the GEDCOM 5.5.1 specification page 34.
+
+=cut
+
 @EVENTS = qw(BIRT CHR DEAT BURI CREM ADOP BAPM BARM BASM BLES CHRA
     CONF FCOM ORDN NATU EMIG IMMI CENS PROB WILL GRAD
     RETI EVEN ANUL CENS DIV DIVF ENGA MARB MARC MARR MARL
     MARS RESI);
+
+=item C<@ATTRIBUTES>
+
+The C<@ATTRIBUTES> variable holds a list of all record types that are
+attributes. They are parsed as the subclass C<GEDCOM::Record::Attribute>.
+
+See the GEDCOM 5.5.1 specification page 33.
+
+=cut
+
 @ATTRIBUTES = qw(CAST DSCR EDUC IDNO NATI NCHI NMR OCCU PROP RELI
     SSN TITL FACT);
+
+=item C<%EVENTDESC>
+
+This variable holds the descriptions of events, currently only in Swedish (I
+had a multilingual function, but I removed it).
+
+=cut
+
 %EVENTDESC = (
     ADOP => "adopterad",
     ANUL => "anullering av äktenskap",
@@ -62,6 +96,13 @@ our %TAGNAME;
     RETI => "pensionerad",
     WILL => "testamente",
 );
+
+=item C<%TAGNAME>
+
+All GEDCOM tags and their names. In Swedish.
+
+=cut
+
 %TAGNAME = (
     ABBR => "förkortning",
     ADDR => "adress",
@@ -171,6 +212,19 @@ our %TAGNAME;
     RELA => "relationship",
 );
 
+=back
+
+=head2 Class Constructor
+=over 4
+
+=item new( $level, $tag, $id, $value, $global )
+
+Create a new record of type C<$tag> at level C<$level> with @XREF@ C<$id> (if
+available) and value C<$value> (if available). The C<$global> structure should
+be explained somewhere.
+
+=cut
+
 sub new {
     my $this = shift;
     my $class = ref($this) || $this;
@@ -223,6 +277,12 @@ sub new {
     return $self;
 }
 
+=item parse()
+
+I'm not sure what this one does...
+
+=cut
+
 sub parse {
     my $self = shift;
 
@@ -232,6 +292,12 @@ sub parse {
         $subrecord->parse();
     }
 }
+
+=back
+
+=head2 Data Access Methods
+
+=over 4
 
 =item get_value( $tag )
 
@@ -623,5 +689,11 @@ sub sourceline {
     $t .= "\n";
     return $t;
 }
+
+=back
+
+End of file.
+
+=cut
 
 1;

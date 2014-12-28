@@ -1,5 +1,11 @@
-# -*- coding: utf-8 -*-
 package GEDCOM::Record::Date::Range;
+
+=head1 GEDCOM::Record::Date::Range
+
+Range dates.
+
+=cut
+
 use base qw(GEDCOM::Record::Date);
 use strict;
 use warnings;

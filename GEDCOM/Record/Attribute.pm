@@ -1,13 +1,11 @@
+package GEDCOM::Record::Attribute;
 
-=pod
-
-=head The GEDCOM::Record::Attribute package
+=head1 GEDCOM::Record::Attribute
 
 Attributes.
 
 =cut
 
-package GEDCOM::Record::Attribute;
 use base qw(GEDCOM::Record);
 use strict;
 use warnings;

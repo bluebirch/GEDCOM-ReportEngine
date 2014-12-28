@@ -1,5 +1,12 @@
 # -*- coding: utf-8 -*-
 package GEDCOM::Locale;
+
+=head1 GEDCOM::Locale
+
+Obsolete package.
+
+=cut
+
 use warnings;
 use strict;
 use utf8;

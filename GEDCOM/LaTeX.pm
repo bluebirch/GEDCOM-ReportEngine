@@ -1,5 +1,12 @@
 # -*- coding: utf-8 -*-
 package GEDCOM::LaTeX;
+
+=head1 GEDCOM::LaTeX
+
+Obsolete package.
+
+=cut
+
 use warnings;
 use strict;
 use utf8;

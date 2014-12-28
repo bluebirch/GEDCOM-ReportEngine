@@ -1,8 +1,6 @@
 package GEDCOM::Record::Family;
 
-=pod
-
-=head GEDCOM::Record::Family
+=head1 GEDCOM::Record::Family
 
 Family records.
 

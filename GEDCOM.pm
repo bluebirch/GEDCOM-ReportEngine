@@ -1,5 +1,10 @@
-# -*- coding: utf-8 -*-
 package GEDCOM;
+
+=head1 GEDCOM.pm
+
+To be documented.
+
+=cut
 
 use strict;
 use warnings;
@@ -16,7 +21,11 @@ BEGIN {
     $VERSION = "0.0.1";
 }
 
-=item1 new
+=head2 Methods
+
+=over 4
+
+=item C<new( $filename )>
 
 Create a new GEDCOM file object. Expects a file name as argument.
 
@@ -35,7 +44,7 @@ sub new {
     return $self;
 }
 
-=item1 parse
+=item C<parse()>
 
 Parse a GEDCOM file.
 
@@ -125,10 +134,24 @@ sub parse {
     return $self->{root};
 }
 
+=item C<as_source()>
+
+Return entire GEDCOM file as source. This should be identical to original
+file.
+
+=cut
+
 sub as_source {
     my $self = shift;
     return $self->{root}->as_source();
 }
+
+=item C<get_individual( $pattern )>
+
+Find an individual in the GEDCOM database based on the supplied regexp
+pattern. Returns the first match only.
+
+=cut
 
 sub get_individual {
     my ( $self, $pattern ) = @_;
@@ -136,6 +159,10 @@ sub get_individual {
         = ( grep m/$pattern/, keys %{ $self->{global}->{nameindex} } )[0];
     return $firstmatch ? $self->{global}->{nameindex}->{$firstmatch} : undef;
 }
+
+=back
+
+=cut
 
 1;
 

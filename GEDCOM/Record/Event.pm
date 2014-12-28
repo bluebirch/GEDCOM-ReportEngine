@@ -1,13 +1,11 @@
+package GEDCOM::Record::Event;
 
-=pod
-
-=head GEDCOM::Record::Event
+=head1 GEDCOM::Record::Event
 
 Event records.
 
 =cut
 
-package GEDCOM::Record::Event;
 use base qw(GEDCOM::Record);
 use strict;
 use warnings;
