@@ -251,6 +251,7 @@ Write the name as a level 3 markdown heading.
 sub nameheading {
     my $self = shift;
     my $h = $self->refn ? "[" . $self->refn . "] " . $self->fullname : $self->fullname;
+    $h .= " {#" . $self->xref . "}";
     #$t .= $self->addnametoindex . label( $self->id );
     return $h . "\n" . "-" x length( $h ) . "\n\n";
 }
