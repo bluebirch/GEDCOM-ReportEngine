@@ -11,6 +11,7 @@ C<OBJE> records looks like the following:
         FILE <filename>
             FORM <jpg|png|...>
             TITL <text>
+        NOTE <text>
 
 The only interesting things for our purposes is filename and title, that is
 C<FILE> and C<FILE.TITL>. We specify those as methods below. Further, with
@@ -66,7 +67,14 @@ sub inline_image {
         $t = "";
     }
     else {
-        $t = "![" . $self->title . " -- \\[" . $self->id . "\\]](" . $self->file . ")";
+        my $caption = $self->title;
+        my $note = $self->notes;
+        if ($note) {
+            $caption =~ s/\.?$/./; # Title should end with full stop.
+            $note =~ s/\n+/ /g; # Remove linebreaks
+            $caption .= " " . $note;
+        }
+        $t = "![" . $caption . " -- \\[" . $self->id . "\\]](" . $self->file . ")";
         $self->{printed} = 1;
     }
     return $t;
