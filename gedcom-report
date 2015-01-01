@@ -5,6 +5,7 @@ use locale;
 use utf8;
 use Getopt::Long;
 use GEDCOM;
+use Encode;
 use Data::Dumper;
 use open IO => ':utf8';
 
@@ -17,6 +18,7 @@ my $ancestors   = 1;
 my $descendants = 0;
 my $pattern;
 my $xref;
+my $output;
 
 GetOptions(
     "file=s"      => \$gedcom_file,
@@ -25,6 +27,7 @@ GetOptions(
     "type=s"      => \$report_type,
     "pattern=s"   => \$pattern,
     "xref=s"      => \$xref,
+    "output=s"    => \$output,
 ) or die("Felaktiga kommandoradsparametrar");
 
 # Öppna GEDCOM-fil
@@ -35,23 +38,33 @@ my $indi;
 
 # Find object or whatever
 if ($xref) {
+    $xref = "@" . $xref. "@" unless ($xref =~ m/^\@.*\@$/);
+    print STDERR "Find $xref...\n";
     $indi = $ged->get_xref($xref);
 }
-elsif ($pattern) {
-    $indi = $ged->get_individual($pattern);
-}
 else {
-    $pattern = join( " ", @ARGV );
+    $pattern = join( " ", @ARGV ) unless ($pattern);
+    $pattern = decode( "utf-8", $pattern );
+    $pattern =~ s/[\-\.]/ /g;
+    print STDERR "Find \"$pattern\"...\n";
     $indi = $ged->get_individual($pattern);
 }
 
 if ($indi) {
+    print STDERR "Found ", $indi->plainname, ".\n";
+    if ($output) {
+        open( OUTPUT, '>', $output ) or die;
+    }
+    else {
+        *OUTPUT = *STDOUT;
+    }
     if ( $report_type eq "ancestors" ) {
-        print $indi->ancestors_report();
+        print OUTPUT $indi->ancestors_report();
     }
     elsif ( $report_type eq "descendants" ) {
-        print $indi->descendants_report();
+        print OUTPUT $indi->descendants_report();
     }
+    close OUTPUT;
 }
 else {
     print STDERR
