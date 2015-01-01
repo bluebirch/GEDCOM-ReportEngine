@@ -10,6 +10,7 @@ use base qw(GEDCOM::Record);
 use strict;
 use warnings;
 use utf8;
+use Carp;
 use GEDCOM::Locale;
 use GEDCOM::LaTeX;
 use Data::Dumper;
@@ -90,6 +91,26 @@ sub givenname {
     $name =~ s:"::g;
     return $name;
 }
+
+sub shortname {
+    my $self = shift;
+    my $first = $self->givenname;
+    my $last = $self->lastname;
+    $first =~ s/.*?(\w+)\*.*/$1/;
+    return $first . " " . $last;
+}
+
+sub shortname_refn {
+    my $self = shift;
+    my $refn = $self->refnp;
+    if ($refn) {
+        return "[" . $self->shortname . $refn . "](#" . $self->xref . ")";
+    }
+    else {
+        return $self->shortname;
+    }
+}
+
 
 sub sortname {
     my $self = shift;
@@ -299,8 +320,8 @@ sub summary {
     # Just reference if person has already been printed. (Jag vet inte riktigt
     # hur jag skall göra detta i markdown, men det får bli ett senare
     # problem.)
-    if ( $self->{global}->{printed}->{ $self->id } ) {
-        $t .= T("See") . " [" . $self->id . "]\n\n";
+    if ( $self->flagged ) {
+        $t .= "Se " . $self->shortname_refn . "\n\n";
         return $t;
     }
 
@@ -344,7 +365,7 @@ sub summary {
     $t .= $self->listofevents( heading => "### Kronologi" );
 
     # Remember this individual
-    $self->{global}->{printed}->{ $self->id } = 1;
+    $self->flag;
 
     return $t;
 }
@@ -378,13 +399,13 @@ sub childof {
 
     my $t = "";
     if ( $father && $mother ) {
-        $t = sprintf( "%s till %s och %s.", $child, $father->plainname_refn, $mother->plainname_refn );
+        $t = sprintf( "%s till %s och %s.", $child, $father->shortname_refn, $mother->shortname_refn );
     }
     elsif ($father) {
-        $t = sprintf( "%s till %s.", $child, $father->plainname_refn );
+        $t = sprintf( "%s till %s.", $child, $father->shortname_refn );
     }
     elsif ($mother) {
-        $t = sprintf( "%s till %s.", $child, $mother->plainname_refn );
+        $t = sprintf( "%s till %s.", $child, $mother->shortname_refn );
     }
     $t .= ' ' if ($t);
     return $t;

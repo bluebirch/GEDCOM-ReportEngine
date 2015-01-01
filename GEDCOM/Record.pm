@@ -9,6 +9,7 @@ The base class for all types of GEDCOM records.
 use strict;
 use locale;
 use utf8;
+use Carp;
 use GEDCOM::Record::Root;
 use GEDCOM::Record::Date;
 use GEDCOM::Record::Event;
@@ -451,6 +452,51 @@ terminology.
 sub xref {
     my $self = shift;
     return $self->id;
+}
+
+=back
+
+=head2 Flagging
+
+Flagging a record can be done for serveral purposes, but the main purpose is
+keeping track of which records has already been printed in a report, thus
+avoiding duplicates. This is stored in the global data strucure, not within
+the record itself. This makes it easy to reset all flags, for example when
+beginning a new report.
+
+=over 4
+
+=item C<flag()>
+
+Flag this record. Only records with a C<@XREF@> can be flagged.
+
+=cut
+
+sub flag {
+    my $self = shift;
+    if ($self->xref) {
+        $self->{global}->{flagged}->{$self->xref} = 1;
+    }
+    else {
+        carp "Trying to flag a record without xref";
+    }
+}
+
+=item C<flagged()>
+
+Test if this record is flagged.
+
+=cut
+
+sub flagged {
+    my $self = shift;
+    if ($self->xref) {
+        return $self->{global}->{flagged}->{$self->xref};
+    }
+    else {
+        carp "Trying to check flag on record without xref";
+    }
+    return undef;
 }
 
 =back

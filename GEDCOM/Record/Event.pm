@@ -52,7 +52,7 @@ sub name {
     if ( $value && $type ) {
         $t = "$type ($value)";
     }
-    elsif ($value) {
+    elsif ($value && $value ne 'Y') {
         $t = $value;
     }
     elsif ($type) {

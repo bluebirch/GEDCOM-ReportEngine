@@ -75,7 +75,7 @@ sub inline_image {
             $caption .= " " . $note;
         }
         $t = "![" . $caption . " -- \\[" . $self->id . "\\]](" . $self->file . ")";
-        $self->{printed} = 1;
+        $self->flag; # flag this object
     }
     return $t;
 }
@@ -89,7 +89,7 @@ an inline image (see above).
 
 sub printed {
     my $self = shift;
-    return $self->{printed};
+    return $self->flagged;
 }
 
 =back
