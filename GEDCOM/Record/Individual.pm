@@ -526,11 +526,6 @@ sub _report {
     $self->$sub( generations => $generations )
         unless ( $self->{$type} );
 
-    # "Connect global reference number table with this tree." -- Det här vet
-    # jag faktiskt inte vad det betyder. Det var länge sedan jag skrev den här
-    # koden.
-    $self->{global}->{refn} = $self->{$type_refn};
-
     # I variabeln $t lagras hela den textsträng som skall bli ett markdown-
     # dokument. Vi börjar med att ange dokumentets titel. Det gör vi i ett
     # YAML-block i början av dokumentet.
@@ -595,8 +590,9 @@ sub make_ancestors_tree {
     # generation holds the parents of previous generation.
     @{ $self->{ancestors} } = ( [$self] );
 
-    # The beginning person gets reference number 1.
-    $self->{ancestors_refn}->{ $self->id } = 1;
+    # The beginning person gets reference number 1. Store this in global data
+    # structure in order to make it possible to clear!
+    $self->{global}->{refn}->{ $self->id } = 1;
 
     # Step through all individuals in generation $generation and add
     # their parents to $generation+1.
@@ -610,8 +606,8 @@ sub make_ancestors_tree {
                 push @$parents, $indi->father;
 
                 # Father gets number 2n
-                $self->{ancestors_refn}->{ $indi->father->id }
-                    = $self->{ancestors_refn}->{ $indi->id } * 2;
+                $self->{global}->{refn}->{ $indi->father->id }
+                    = $self->{global}->{refn}->{ $indi->id } * 2;
 
                 # Store relation
                 $self->set_parental_relation( $indi, $indi->father );
@@ -620,8 +616,8 @@ sub make_ancestors_tree {
                 push @$parents, $indi->mother;
 
                 # Mother gets number 2n+1
-                $self->{ancestors_refn}->{ $indi->mother->id }
-                    = $self->{ancestors_refn}->{ $indi->id } * 2 + 1;
+                $self->{global}->{refn}->{ $indi->mother->id }
+                    = $self->{global}->{refn}->{ $indi->id } * 2 + 1;
 
                 # Store relation
                 $self->set_parental_relation( $indi, $indi->mother );
