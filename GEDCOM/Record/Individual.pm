@@ -59,6 +59,12 @@ sub plainname {
     return $name;
 }
 
+=item C<plainname_refn()>
+
+Name, with reference number, if it exists.
+
+=cut
+
 sub plainname_refn {
     my $self = shift;
     my $refn = $self->refnp;
@@ -70,6 +76,12 @@ sub plainname_refn {
     }
 }
 
+=item C<plainname_year()>
+
+Name, with life span years, if available.
+
+=cut
+
 sub plainname_year {
     my $self = shift;
     my $name = $self->plainname;
@@ -77,12 +89,24 @@ sub plainname_year {
     return $span ? "$name ($span)" : $name;
 }
 
+=item C<lastname()>
+
+Last name, or surname, or family name, or whatever.
+
+=cut
+
 sub lastname {
     my $self = shift;
     my $name = $self->name;
     $name =~ m:/(.*?)/:;
     return $1 ? $1 : '';
 }
+
+=item C<givenname()>
+
+Given name, or first names.
+
+=cut
 
 sub givenname {
     my $self = shift;
@@ -92,13 +116,23 @@ sub givenname {
     return $name;
 }
 
+=item C<shortname()>
+
+Call name, that is, the name marked with an asterisk, C<*>, and the last name
+or surname or family name.
+
+=cut
+
 sub shortname {
     my $self = shift;
-    my $first = $self->givenname;
-    my $last = $self->lastname;
-    $first =~ s/.*?(\w+)\*.*/$1/;
-    return $first . " " . $last;
+    return $self->firstname . " " . $self->lastname;
 }
+
+=item C<shortname_refn()>
+
+As C<shortname()>, with reference number.
+
+=cut
 
 sub shortname_refn {
     my $self = shift;
@@ -111,16 +145,48 @@ sub shortname_refn {
     }
 }
 
+=item C<firstname()>
+
+The preferred first name, or call name.
+
+=cut
+
+sub firstname {
+    my $self  = shift;
+    my $first = $self->givenname;
+    $first =~ s/.*?(\w+)\*.*/$1/;
+    return $first;
+}
+
+=item C<firstnames()>
+
+The preferred first name, with an ending genitive "s". Must be language
+sensitive. It only deals with Swedish now.
+
+=cut
+
+sub firstnames {
+    my $self  = shift;
+    my $first = $self->firstname;
+    $first .= "s" unless ( $first =~ m/(?:s|ce)$/ );
+    return $first;
+}
+
+=item C<sortname()>
+
+Sorting name, that is, "last, first".
+
+=cut
 
 sub sortname {
     my $self = shift;
     return $self->lastname . ", " . $self->givenname;
 }
 
-sub addnametoindex {
-    my $self = shift;
-    return addtoindex( $self->lastname . '!' . $self->givenname );
-}
+# sub addnametoindex {
+#     my $self = shift;
+#     return addtoindex( $self->lastname . '!' . $self->givenname );
+# }
 
 sub lifespan_years {
     my $self  = shift;
@@ -155,29 +221,29 @@ Returnera händelser för $tag som textsträng.
 
 sub event {
     my $self = shift;
-    my $tag = shift;
-    my $t = join( '', map { $_->as_sentence( @_ ) } $self->get_records($tag) );
+    my $tag  = shift;
+    my $t = join( '', map { $_->as_sentence(@_) } $self->get_records($tag) );
     return $t;
 }
 
 sub birth {
     my $self = shift;
-    return $self->event('BIRT', @_ );
+    return $self->event( 'BIRT', @_ );
 }
 
 sub baptism {
     my $self = shift;
-    return $self->event('BAPM', @_ );
+    return $self->event( 'BAPM', @_ );
 }
 
 sub death {
     my $self = shift;
-    return $self->event('DEAT', @_ );
+    return $self->event( 'DEAT', @_ );
 }
 
 sub burial {
     my $self = shift;
-    return $self->event('BURI', @_ );
+    return $self->event( 'BURI', @_ );
 }
 
 =back
@@ -251,10 +317,14 @@ Write the name as a level 3 markdown heading.
 
 sub nameheading {
     my $self = shift;
-    my $h = $self->refn ? "[" . $self->refn . "] " . $self->fullname : $self->fullname;
+    my $h
+        = $self->refn
+        ? "[" . $self->refn . "] " . $self->fullname
+        : $self->fullname;
     $h .= " {#" . $self->xref . "}";
+
     #$t .= $self->addnametoindex . label( $self->id );
-    return $h . "\n" . "-" x length( $h ) . "\n\n";
+    return $h . "\n" . "-" x length($h) . "\n\n";
 }
 
 ### REPORTS
@@ -276,7 +346,8 @@ sub oneliner {
     my $death = $self->get_record_path("DEAT.DATE");
     my $t     = '';
     if ( $birth && $death ) {
-        $t = sprintf( "%s, ✴ %s, † %s.", $name, $birth->as_string, $death->as_string );
+        $t = sprintf( "%s, ✴ %s, † %s.",
+            $name, $birth->as_string, $death->as_string );
     }
     elsif ($birth) {
         $t = sprintf( "%s, ✴ %s.", $name, $birth->as_string );
@@ -287,6 +358,7 @@ sub oneliner {
     else {
         $t = sprintf( "%s.", $name );
     }
+
     #$t .= $self->addnametoindex;
     return $t;
 }
@@ -314,8 +386,16 @@ sub summary {
     my $t = $self->nameheading();
 
     # Ange först relationen till huvudpersonen, så att säga.
-    $t .= ucfirst( decode_relation( $opt{relation} ) ) . '. '
-        if ( $opt{relation} );
+    if ( $opt{relation} ) {
+        my $relation = $self->relation_to( $opt{relation} );
+        if ($relation) {
+            $t .= $opt{relation}->firstnames . " "
+                . $self->relation_to( $opt{relation} ) . ".\n\n";
+        }
+    }
+
+    #    $t .= ucfirst( decode_relation( $opt{relation} ) ) . '. '
+    #        if ( $opt{relation} );
 
     # Just reference if person has already been printed. (Jag vet inte riktigt
     # hur jag skall göra detta i markdown, men det får bli ett senare
@@ -337,7 +417,7 @@ sub summary {
     }
 
     # Död
-    $t .= $self->death( nosource => 1);
+    $t .= $self->death( nosource => 1 );
 
     # Remove trailing spaces
     $t =~ s/\s+$//s;
@@ -352,11 +432,15 @@ sub summary {
     $t .= $self->inline_images;
 
     # Barn
-    $t .= $self->listofchildren( spouseinfo => $opt{spouseinfo}, images => 1 );
+    $t .= $self->listofchildren(
+        spouseinfo => $opt{spouseinfo},
+        images     => 1
+    );
 
     # Anteckningar
     $t .= $self->notes( heading => "### Anteckningar" );
-#        if ( $opt{notes} );
+
+    #        if ( $opt{notes} );
 
     # Egenskaper
     $t .= $self->listofattributes( heading => "### Fakta" );
@@ -399,7 +483,8 @@ sub childof {
 
     my $t = "";
     if ( $father && $mother ) {
-        $t = sprintf( "%s till %s och %s.", $child, $father->shortname_refn, $mother->shortname_refn );
+        $t = sprintf( "%s till %s och %s.",
+            $child, $father->shortname_refn, $mother->shortname_refn );
     }
     elsif ($father) {
         $t = sprintf( "%s till %s.", $child, $father->shortname_refn );
@@ -438,14 +523,17 @@ sub listofchildren {
             # Display spouse info
             if ($spouse) {
                 if ( $opt{spouseinfo} ) {
+
                     # Rubrik i form av make/makas namn
                     $t .= "### " . $spouse->fullname . "\n\n";
                     $t .= $spouse->birth . $spouse->childof . $spouse->death;
                     $t .= "\n\n";
-                    $t .= sprintf( "Barn till %s och %s:\n\n", $self->plainname, $spouse->plainname );
+                    $t .= sprintf( "Barn till %s och %s:\n\n",
+                        $self->plainname, $spouse->plainname );
                 }
                 else {
-                    $t .= sprintf( "### Barn med %s\n\n", $spouse->plainname );
+                    $t .= sprintf( "### Barn med %s\n\n",
+                        $spouse->plainname );
                 }
             }
             else {
@@ -462,7 +550,7 @@ sub listofchildren {
             $t .= "\n";
 
             # Print media (if exists)
-            $t .= $fam->inline_images if ($opt{images});
+            $t .= $fam->inline_images if ( $opt{images} );
         }
     }
     return $t;
@@ -550,9 +638,10 @@ sub _report {
     for my $generation ( 0 .. $#{ $self->{$type} } ) {
 
         # Sätt en rubrik. Vi gör en läsvänlig markdown-rubrik.
-        my $heading = ucfirst( sprintf( "%s generationen", ordinal( $generation + 1 ) ) );
+        my $heading = ucfirst(
+            sprintf( "%s generationen", ordinal( $generation + 1 ) ) );
         $t .= $heading . "\n";
-        $t .= "=" x length( $heading ) . "\n\n";
+        $t .= "=" x length($heading) . "\n\n";
 
         # Och så rapporterar vi varje individ. Det gör vi i funktionen
         # 'summary', som uppenbarligen anropas härifrån.
@@ -560,7 +649,7 @@ sub _report {
             $t .= $i->summary(
                 spouseinfo => $spouseinfo,
                 notes      => $opt{notes},
-                relation   => $self->{relation}->{ $i->xref }
+                relation   => $self
             );
         }
     }
@@ -630,6 +719,16 @@ sub make_ancestors_tree {
     } while ( @$parents && $generation < $max_generations - 1 );
 }
 
+=item C<set_parental_relation( $person, $parent )>
+
+Define the relationship between C<$person> and C<$parent> as one of parent-
+child, but with an unlimited steps of parental relations inbetween. Yes, it is
+a bad description of what this function actually does, but it was a long time
+ago I wrote it, and it's actually quite clever. However, not THAT clever.
+There are certainly room for improvement.
+
+=cut
+
 sub set_parental_relation {
     my ( $self, $person, $parent ) = @_;
     my $relation = $self->{relation}->{ $person->xref };
@@ -643,9 +742,67 @@ sub set_parental_relation {
     $self->{relation}->{ $parent->xref } = $relation;
 }
 
-=pod
+=item C<relation_to( $person )>
 
-=item make_descendants_tree( $max_generations )
+Return the kind of relation between the current record (C<$self>) and the
+person specified -- if we know it. It has to be built by
+C<set_parental_relation> above (and other future methods).
+
+=cut
+
+sub relation_to {
+    my ( $self, $person ) = @_;
+    if ( $person->{relation}->{ $self->xref } ) {
+        my $relation = $person->{relation}->{ $self->xref };
+        my $t        = '';
+
+        while ( length($relation) > 2 ) {
+            my $pair = substr $relation, 0, 2, '';
+            if ( $pair eq 'FF' ) {
+                $t .= "farfars ";
+            }
+            elsif ( $pair eq 'FM' ) {
+                $t .= "farmors ";
+            }
+            elsif ( $pair eq 'MM' ) {
+                $t .= "mormors ";
+            }
+            elsif ( $pair eq 'MF' ) {
+                $t .= "morfars ";
+            }
+            else {
+                die "lack of logic";
+            }
+        }
+
+        if ( $relation eq 'FF' ) {
+            $t .= "farfar";
+        }
+        elsif ( $relation eq 'FM' ) {
+            $t .= "farmor";
+        }
+        elsif ( $relation eq 'MM' ) {
+            $t .= "mormor";
+        }
+        elsif ( $relation eq 'MF' ) {
+            $t .= "morfar";
+        }
+        elsif ( $relation eq 'F' ) {
+            $t .= "far";
+        }
+        elsif ( $relation eq 'M' ) {
+            $t .= "mor";
+        }
+        else {
+            die "logic failure";
+        }
+
+        return $t;
+    }
+    return "";
+}
+
+=item C<make_descendants_tree( generations => $max_generations )>
 
 Build an internal structure of descendants for each generation.
 
