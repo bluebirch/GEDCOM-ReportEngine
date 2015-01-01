@@ -1,0 +1,59 @@
+#!/usr/bin/perl
+
+use strict;
+use locale;
+use utf8;
+use Getopt::Long;
+use GEDCOM;
+use Data::Dumper;
+use open IO => ':utf8';
+
+binmode STDOUT, ":utf8";
+
+my $gedcom_file = "genealogi.ged";
+my $individual;
+my $report_type = "ancestors";
+my $ancestors   = 1;
+my $descendants = 0;
+my $pattern;
+my $xref;
+
+GetOptions(
+    "file=s"      => \$gedcom_file,
+    "ancestors"   => \$ancestors,
+    "descendants" => \$descendants,
+    "type=s"      => \$report_type,
+    "pattern=s"   => \$pattern,
+    "xref=s"      => \$xref,
+) or die("Felaktiga kommandoradsparametrar");
+
+# Öppna GEDCOM-fil
+my $ged = new GEDCOM $gedcom_file;
+
+# The individual for which we should create a report
+my $indi;
+
+# Find object or whatever
+if ($xref) {
+    $indi = $ged->get_xref($xref);
+}
+elsif ($pattern) {
+    $indi = $ged->get_individual($pattern);
+}
+else {
+    $pattern = join( " ", @ARGV );
+    $indi = $ged->get_individual($pattern);
+}
+
+if ($indi) {
+    if ( $report_type eq "ancestors" ) {
+        print $indi->ancestors_report();
+    }
+    elsif ( $report_type eq "descendants" ) {
+        print $indi->descendants_report();
+    }
+}
+else {
+    print STDERR
+        "No idividual found. Use either --xref <xref> or --pattern <pattern>.\n";
+}

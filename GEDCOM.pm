@@ -160,6 +160,17 @@ sub get_individual {
     return $firstmatch ? $self->{global}->{nameindex}->{$firstmatch} : undef;
 }
 
+=item C<get_xref( $xref )>
+
+Find an object based on its C<@XREF@>.
+
+=cut
+
+sub get_xref {
+    my ($self, $xref) = @_;
+    return $self->{global}->{xref}->{$xref};
+}
+
 =back
 
 =cut
