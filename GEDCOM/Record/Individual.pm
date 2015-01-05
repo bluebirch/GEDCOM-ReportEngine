@@ -621,10 +621,10 @@ sub _report {
 
     # Titeln blir lite olika beroende på vad det är för typ av rapport som skapas.
     if ( $type eq 'ancestors' ) {
-        $t .= "Antavla för " . $self->plainname;
+        $t .= "Anor till " . $self->shortname;
     }
     elsif ( $type eq 'descendants' ) {
-        $t .= "Stamtavla för " . $self->plainname;
+        $t .= "Ättlingar till " . $self->shortname;
         $spouseinfo = 1;
     }
     else {
