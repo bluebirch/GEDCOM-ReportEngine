@@ -1,18 +1,18 @@
-package GEDCOM::Record::Individual;
+package GEDCOM::ReportEngine::Record::Individual;
 
-=head1 GEDCOM::Record::Individual
+=head1 GEDCOM::ReportEngine::Record::Individual
 
 =over 8
 
 =cut
 
-use base qw(GEDCOM::Record);
+use base qw(GEDCOM::ReportEngine::Record);
 use strict;
 use warnings;
 use utf8;
 use Carp;
-use GEDCOM::Locale;
-use GEDCOM::LaTeX;
+use GEDCOM::ReportEngine::Locale;
+use GEDCOM::ReportEngine::LaTeX;
 use Data::Dumper;
 
 sub parse {
@@ -429,12 +429,12 @@ sub summary {
     $t .= "\n\n";
 
     # Images
-    $t .= $self->inline_images;
+    $t .= $self->inline_images if ($opt{images});
 
     # Barn
     $t .= $self->listofchildren(
         spouseinfo => $opt{spouseinfo},
-        images     => 1
+        images     => $opt{images}
     );
 
     # Anteckningar

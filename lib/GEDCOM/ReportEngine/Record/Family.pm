@@ -1,12 +1,12 @@
-package GEDCOM::Record::Family;
+package GEDCOM::ReportEngine::Record::Family;
 
-=head1 GEDCOM::Record::Family
+=head1 GEDCOM::ReportEngine::Record::Family
 
 Family records.
 
 =cut
 
-use base qw(GEDCOM::Record);
+use base qw(GEDCOM::ReportEngine::Record);
 use strict;
 use warnings;
 use utf8;

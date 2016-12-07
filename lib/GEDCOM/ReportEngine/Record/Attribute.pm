@@ -1,12 +1,12 @@
-package GEDCOM::Record::Attribute;
+package GEDCOM::ReportEngine::Record::Attribute;
 
-=head1 GEDCOM::Record::Attribute
+=head1 GEDCOM::ReportEngine::Record::Attribute
 
 Attributes.
 
 =cut
 
-use base qw(GEDCOM::Record);
+use base qw(GEDCOM::ReportEngine::Record);
 use strict;
 use warnings;
 use utf8;

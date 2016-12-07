@@ -1,6 +1,6 @@
-package GEDCOM::Record::Source;
+package GEDCOM::ReportEngine::Record::Source;
 
-=head1 GEDCOM::Record::Source
+=head1 GEDCOM::ReportEngine::Record::Source
 
 =encoding utf8
 
@@ -14,7 +14,7 @@ This is a class for GEDCOM C<SOUR> records.
 
 =cut
 
-use base qw(GEDCOM::Record);
+use base qw(GEDCOM::ReportEngine::Record);
 use strict;
 use warnings;
 use utf8;

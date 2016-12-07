@@ -1,5 +1,5 @@
-package GEDCOM;
-
+# ABSTRACT: A GEDCOM Report Engine written in Perl
+package GEDCOM::ReportEngine;
 =head1 GEDCOM.pm
 
 To be documented.
@@ -12,8 +12,8 @@ use locale;
 use utf8;
 
 use IO::File;
-use GEDCOM::Locale;
-use GEDCOM::Record;
+#use GEDCOM::ReportEngine::Locale;
+use GEDCOM::ReportEngine::Record;
 use Data::Dumper;
 
 BEGIN {
@@ -35,7 +35,7 @@ sub new {
     my $this  = shift;
     my $class = ref($this) || $this;
     my $self  = {
-        root   => GEDCOM::Record->new( -1, '_ROOT' ),
+        root   => GEDCOM::ReportEngine::Record->new( -1, '_ROOT' ),
         global => {}
     };
     $self->{filename} = shift;
@@ -83,7 +83,7 @@ sub parse {
 
                 # Create a GEDCOM record object.
                 my $record
-                    = GEDCOM::Record->new( $level, $tag, $id, $data,
+                    = GEDCOM::ReportEngine::Record->new( $level, $tag, $id, $data,
                     $self->{global} );
 
                 # If level is same as last level, add to subrecord on

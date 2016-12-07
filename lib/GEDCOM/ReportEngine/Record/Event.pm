@@ -1,12 +1,12 @@
-package GEDCOM::Record::Event;
+package GEDCOM::ReportEngine::Record::Event;
 
-=head1 GEDCOM::Record::Event
+=head1 GEDCOM::ReportEngine::Record::Event
 
 Event records.
 
 =cut
 
-use base qw(GEDCOM::Record);
+use base qw(GEDCOM::ReportEngine::Record);
 use strict;
 use warnings;
 use utf8;
@@ -43,7 +43,7 @@ sub name {
     # The name of the event should also consider the value field,
     # especially for OCCU and EVEN records.
     my $self  = shift;
-    my $name  = ( $GEDCOM::Record::EVENTDESC{ $self->tag } || $self->tag );
+    my $name  = ( $GEDCOM::ReportEngine::Record::EVENTDESC{ $self->tag } || $self->tag );
     my $value = $self->value;
     my $type  = $self->get_value("TYPE");
     my $cause = $self->get_value("CAUS");

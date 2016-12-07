@@ -1,18 +1,18 @@
-package GEDCOM::Record::Place;
+package GEDCOM::ReportEngine::Record::Place;
 
-=head1 GEDCOM::Record::Place
+=head1 GEDCOM::ReportEngine::Record::Place
 
-This package is a subclass of GEDCOM::Record and includes special handling of
+This package is a subclass of GEDCOM::ReportEngine::Record and includes special handling of
 places and names of places.
 
 =cut
 
-use base qw(GEDCOM::Record);
+use base qw(GEDCOM::ReportEngine::Record);
 use strict;
 use warnings;
 use utf8;
-use GEDCOM::Locale;
-use GEDCOM::LaTeX;
+use GEDCOM::ReportEngine::Locale;
+use GEDCOM::ReportEngine::LaTeX;
 
 # sub parse {
 #     my $self = shift;

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-package GEDCOM::Locale;
+package GEDCOM::ReportEngine::Locale;
 
-=head1 GEDCOM::Locale
+=head1 GEDCOM::ReportEngine::Locale
 
 Obsolete package.
 
@@ -33,8 +33,8 @@ BEGIN {
     $Locale =~ s/\..*//;
 
     print STDERR "Setting locale $Locale\n";
-    if ( eval "require GEDCOM::Locale::$Locale" ) {
-        eval "\%Translation = \%GEDCOM::Locale::${Locale}::T";
+    if ( eval "require GEDCOM::ReportEngine::Locale::$Locale" ) {
+        eval "\%Translation = \%GEDCOM::ReportEngine::Locale::${Locale}::T";
     }
     else {
         print STDERR "Translation for locale $Locale not available.\n";

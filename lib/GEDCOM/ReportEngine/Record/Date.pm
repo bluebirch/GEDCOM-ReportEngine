@@ -1,18 +1,18 @@
-package GEDCOM::Record::Date;
+package GEDCOM::ReportEngine::Record::Date;
 
-=head1 GEDCOM::Record::Date
+=head1 GEDCOM::ReportEngine::Record::Date
 
 =over 8
 
 =cut
 
-use base qw(GEDCOM::Record);
+use base qw(GEDCOM::ReportEngine::Record);
 use strict;
 use warnings;
 use utf8;
-#use GEDCOM::Locale;
-use GEDCOM::Record::Date::Range;
-use GEDCOM::Record::Date::Interval;
+#use GEDCOM::ReportEngine::Locale;
+use GEDCOM::ReportEngine::Record::Date::Range;
+use GEDCOM::ReportEngine::Record::Date::Interval;
 use Date::Calc qw(:all);
 use Data::Dumper;
 

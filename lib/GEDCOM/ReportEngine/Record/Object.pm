@@ -1,6 +1,6 @@
-package GEDCOM::Record::Object;
+package GEDCOM::ReportEngine::Record::Object;
 
-=head1 GEDCOM::Record::Object
+=head1 GEDCOM::ReportEngine::Record::Object
 
 =encoding utf8
 
@@ -20,7 +20,7 @@ single line), so we'll create a method for that as well.
 
 =cut
 
-use base qw(GEDCOM::Record);
+use base qw(GEDCOM::ReportEngine::Record);
 use strict;
 use warnings;
 use utf8;
@@ -74,7 +74,7 @@ sub inline_image {
             $note =~ s/\n+/ /g; # Remove linebreaks
             $caption .= " " . $note;
         }
-        $t = "![" . $caption . " -- \\[" . $self->id . "\\]](" . $self->file . ")";
+        $t = "![" . $caption . " -- \\[" . $self->id . "\\]](" . $self->file . "){ width=80% }";
         $self->flag; # flag this object
     }
     return $t;

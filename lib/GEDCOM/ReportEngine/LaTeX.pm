@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-package GEDCOM::LaTeX;
+package GEDCOM::ReportEngine::LaTeX;
 
-=head1 GEDCOM::LaTeX
+=head1 GEDCOM::ReportEngine::LaTeX
 
 Obsolete package.
 

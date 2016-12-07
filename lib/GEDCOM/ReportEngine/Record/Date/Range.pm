@@ -1,12 +1,12 @@
-package GEDCOM::Record::Date::Range;
+package GEDCOM::ReportEngine::Record::Date::Range;
 
-=head1 GEDCOM::Record::Date::Range
+=head1 GEDCOM::ReportEngine::Record::Date::Range
 
 Range dates.
 
 =cut
 
-use base qw(GEDCOM::Record::Date);
+use base qw(GEDCOM::ReportEngine::Record::Date);
 use strict;
 use warnings;
 use utf8;

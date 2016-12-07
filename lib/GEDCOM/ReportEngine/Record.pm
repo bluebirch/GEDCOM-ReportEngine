@@ -1,6 +1,6 @@
-package GEDCOM::Record;
+package GEDCOM::ReportEngine::Record;
 
-=head1 GEDCOM::Record
+=head1 GEDCOM::ReportEngine::Record
 
 The base class for all types of GEDCOM records.
 
@@ -10,15 +10,15 @@ use strict;
 use locale;
 use utf8;
 use Carp;
-use GEDCOM::Record::Root;
-use GEDCOM::Record::Date;
-use GEDCOM::Record::Event;
-use GEDCOM::Record::Attribute;
-use GEDCOM::Record::Place;
-use GEDCOM::Record::Individual;
-use GEDCOM::Record::Family;
-use GEDCOM::Record::Object;
-use GEDCOM::Record::Source;
+use GEDCOM::ReportEngine::Record::Root;
+use GEDCOM::ReportEngine::Record::Date;
+use GEDCOM::ReportEngine::Record::Event;
+use GEDCOM::ReportEngine::Record::Attribute;
+use GEDCOM::ReportEngine::Record::Place;
+use GEDCOM::ReportEngine::Record::Individual;
+use GEDCOM::ReportEngine::Record::Family;
+use GEDCOM::ReportEngine::Record::Object;
+use GEDCOM::ReportEngine::Record::Source;
 use Data::Dumper;
 
 our @EVENTS;
@@ -33,7 +33,7 @@ our %TAGNAME;
 =item C<@EVENTS>
 
 The C<@EVENTS> variable holds a list of all record types that should be
-regarded as events. They are parsed as the subclass C<GEDCOM::Record::Event>.
+regarded as events. They are parsed as the subclass C<GEDCOM::ReportEngine::Record::Event>.
 
 See the GEDCOM 5.5.1 specification page 34.
 
@@ -47,7 +47,7 @@ See the GEDCOM 5.5.1 specification page 34.
 =item C<@ATTRIBUTES>
 
 The C<@ATTRIBUTES> variable holds a list of all record types that are
-attributes. They are parsed as the subclass C<GEDCOM::Record::Attribute>.
+attributes. They are parsed as the subclass C<GEDCOM::ReportEngine::Record::Attribute>.
 
 See the GEDCOM 5.5.1 specification page 33.
 
@@ -508,8 +508,8 @@ sub flagged {
 =item C<refn()>
 
 Internal reference number, if it exists. These are set by
-C<GEDCOM::Record::Individual->make_ancestors_tree> and
-C<GEDCOM::Record::Individual->make_descendatns_tree>. Before building either
+C<GEDCOM::ReportEngine::Record::Individual->make_ancestors_tree> and
+C<GEDCOM::ReportEngine::Record::Individual->make_descendatns_tree>. Before building either
 tree, this methods returns nothing.
 
 =cut
@@ -675,7 +675,7 @@ sub get_strings {
 
 =item C<reset_places()>
 
-Reset place memory (see C<GEDCOM::Record::Place>).
+Reset place memory (see C<GEDCOM::ReportEngine::Record::Place>).
 
 =cut
 
@@ -834,7 +834,7 @@ Return attributes as an unnumbered markdown list.
 sub listofattributes {
     my $self       = shift;
     my %opt        = @_;
-    my $attributes = $self->collect_attributes;
+    my $attributes = $self->collect_attributes( qw(CAST DSCR EDUC NATI NCHI NMR OCCU PROP RELI SSN TITL FACT) );
 
     return "" unless (@$attributes);    # No attributes, no table.
 
@@ -963,7 +963,7 @@ sub footnotes {
 
 Notes, as stored in NOTE records.
 
-When thinking of it, I guess this method should go into GEDCOM::Records; there
+When thinking of it, I guess this method should go into GEDCOM::ReportEngine::Records; there
 are notes in other places as well.
 
 =cut
