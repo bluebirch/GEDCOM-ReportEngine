@@ -4,7 +4,7 @@ use strict;
 use locale;
 use utf8;
 use Getopt::Long;
-use GEDCOM;
+use GEDCOM::ReportEngine;
 use Encode;
 use Data::Dumper;
 use open IO => ':utf8';
@@ -31,7 +31,7 @@ GetOptions(
 ) or die("Felaktiga kommandoradsparametrar");
 
 # Öppna GEDCOM-fil
-my $ged = new GEDCOM $gedcom_file;
+my $ged = new GEDCOM::ReportEngine $gedcom_file;
 
 # The individual for which we should create a report
 my $indi;

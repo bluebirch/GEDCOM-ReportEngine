@@ -10,6 +10,7 @@ use base qw(GEDCOM::ReportEngine::Record);
 use strict;
 use warnings;
 use utf8;
+
 #use GEDCOM::ReportEngine::Locale;
 use GEDCOM::ReportEngine::Record::Date::Range;
 use GEDCOM::ReportEngine::Record::Date::Interval;
@@ -37,17 +38,24 @@ BEGIN {
     Language( Decode_Language("svenska") );
 }
 
+=item C<_parsedate()>
+
+An internal function that parses date values. Gregorian calendar is assumed
+unless the date is prefixed with an escape value. For now, I recognize the
+calendar escape, but ignore it.
+
+=cut
+
 sub _parsedate {
     my ( $self, $date ) = @_;
 
-    $date
-        =~ m/^((\d+)\s+)?((JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)\s+)?(\d{4})$/i
+    $date =~ m/^(?:@#(.*?)@\s+)?(?:(\d+)\s+)?(?:(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)\s+)?(\d{4})$/i
         or die "Invalid date $date";
 
     my @date = ( 0, 0, 0 );
 
-    $date[0] = $5               if ($5);
-    $date[1] = $Months{ uc $4 } if ($4);
+    $date[0] = $4               if ($4);
+    $date[1] = $Months{ uc $3 } if ($3);
     $date[2] = $2               if ($2);
 
     return @date;
@@ -100,12 +108,36 @@ sub _numericdate {
     return $t;
 }
 
+=item C<parse()>
+
+Parse date value. A date value can be:
+
+=over
+=item a plain date, which consist of a date;
+=item a period between two dates;
+=item a range between two dates;
+=item an approximate date;
+=item an interpreted date value from a specified phrase;
+=item or a non-interpreted phrase (GEDCOM 5.5.1 p. 47).
+=back
+
+=cut
+
 sub parse {
     my $self  = shift;
     my $class = ref($self);
     my $date  = $self->{value};
 
-    my ( @date1, @date2 );
+    print STDERR "parse date: $date\n";
+
+    # FIXME: The parse logic here is broken! Se issue #1 on Github.
+
+    # Interpreted date (p. 47): INT <DATE> (<DATE_PHRASE>)
+    if ( $date =~ s/\s*INT\s+//i ) {
+        $self->{interpreted} = 1;
+        $date =~ s/\s*\((.*?)\)\s*$//;
+        $self->{date_phrase} = $1;
+    }
 
     # Check if date is estimated
     if ( $date =~ s/\s*EST\s+//i ) {
@@ -123,37 +155,38 @@ sub parse {
     }
 
     # Check if date is a range
-    if ( $date =~ m/FROM (.*?) TO (.*)/i ) {
+    if ( $date =~ m/FROM\s+(.*?)\s+TO\s+(.*)/i ) {
         $class .= '::Range';
         @{ $self->{date1} } = $self->_parsedate($1);
         @{ $self->{date2} } = $self->_parsedate($2);
     }
-    elsif ( $date =~ m/FROM (.*)/i ) {
+    elsif ( $date =~ m/FROM\s+(.*)/i ) {
         $class .= '::Range';
         @{ $self->{date1} } = $self->_parsedate($1);
     }
-    elsif ( $date =~ m/TO (.*)/i ) {
+    elsif ( $date =~ m/TO\s+(.*)/i ) {
         $class .= '::Range';
         @{ $self->{date2} } = $self->_parsedate($1);
     }
 
     # Check if date is interval
-    elsif ( $date =~ m/BET (.*?) AND (.*)/i ) {
+    elsif ( $date =~ m/BET\s+(.*?)\s+AND\s+(.*)/i ) {
         $class .= '::Interval';
         @{ $self->{date1} } = $self->_parsedate($1);
         @{ $self->{date2} } = $self->_parsedate($2);
     }
-    elsif ( $date =~ m/AFT (.*)/i ) {
+    elsif ( $date =~ m/AFT\s+(.*)/i ) {
         $class .= '::Interval';
         @{ $self->{date1} } = $self->_parsedate($1);
     }
-    elsif ( $date =~ m/BEF (.*)/i ) {
+    elsif ( $date =~ m/BEF\s+(.*)/i ) {
         $class .= '::Interval';
         @{ $self->{date2} } = $self->_parsedate($1);
     }
 
     # Assume date is point in time
     else {
+        print STDERR "       now: $date\n";
         @{ $self->{date1} } = $self->_parsedate($date);
     }
 
@@ -185,7 +218,7 @@ sub sortkey {
             @date = ( 0, 0, 0 );
         }
 
-       #    print "created sort key ", sprintf( "%04d%02d%02d", @date ), "\n";
+        #    print "created sort key ", sprintf( "%04d%02d%02d", @date ), "\n";
         $self->{sortkey} = sprintf( "%04d%02d%02d", @date );
     }
     return $self->{sortkey};
@@ -224,9 +257,9 @@ Return a string prefixing the date, such as 'estimated' or 'calculated'.
 sub prefix {
     my $self = shift;
     my $t    = '';
-    $t .= "uppskattat "  if ( $self->{estimated} );
+    $t .= "uppskattat " if ( $self->{estimated} );
     $t .= "beräkntat " if ( $self->{calculated} );
-    $t .= "omkring "      if ( $self->{approximated} );
+    $t .= "omkring "    if ( $self->{approximated} );
     return $t;
 }
 
@@ -282,8 +315,8 @@ sub delta {
 
     return '' unless ($other);
 
-#     print STDERR "Dates1: ", $self->_isodate( $self->latest ), " ", $self->_isodate( $self->earliest ), "\n";
-#     print STDERR "Dates2: ", $self->_isodate( $other->latest ), " ", $self->_isodate( $other->earliest ), "\n";
+    #     print STDERR "Dates1: ", $self->_isodate( $self->latest ), " ", $self->_isodate( $self->earliest ), "\n";
+    #     print STDERR "Dates2: ", $self->_isodate( $other->latest ), " ", $self->_isodate( $other->earliest ), "\n";
 
     # Calculate shortest possible range (latest of first date and
     # first of second date).

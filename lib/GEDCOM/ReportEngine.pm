@@ -1,5 +1,6 @@
 # ABSTRACT: A GEDCOM Report Engine written in Perl
 package GEDCOM::ReportEngine;
+
 =head1 GEDCOM.pm
 
 To be documented.
@@ -12,6 +13,7 @@ use locale;
 use utf8;
 
 use IO::File;
+
 #use GEDCOM::ReportEngine::Locale;
 use GEDCOM::ReportEngine::Record;
 use Data::Dumper;
@@ -62,10 +64,7 @@ sub parse {
             # Strip lf or crlf
             $line =~ s/\r?\n$//;
 
-            if ( $line
-                =~ m/^\s*(\d+)\s+(?:(@[A-Z0-9]+@)\s+)?([A-Z_]{3,})(?:\s+(.*))?$/
-                )
-            {
+            if ( $line =~ m/^\s*(\d+)\s+(?:(@[A-Z0-9_]+@)\s+)?([A-Z_0-9]{3,})(?:\s+(.*))?$/ ) {
                 my ( $level, $id, $tag, $data ) = ( $1, $2, $3, $4 );
 
                 #           print STDERR "lvl $level tag $tag";
@@ -82,9 +81,7 @@ sub parse {
                 }
 
                 # Create a GEDCOM record object.
-                my $record
-                    = GEDCOM::ReportEngine::Record->new( $level, $tag, $id, $data,
-                    $self->{global} );
+                my $record = GEDCOM::ReportEngine::Record->new( $level, $tag, $id, $data, $self->{global} );
 
                 # If level is same as last level, add to subrecord on
                 # stack.
@@ -111,8 +108,7 @@ sub parse {
 
                 # Otherwise, there must be something wrong.
                 else {
-                    die
-                        "Something went wrong (level $level, current $current_level) $line";
+                    die "Something went wrong (level $level, current $current_level) $line";
                 }
 
                 $current_level = $level;
@@ -167,7 +163,7 @@ Find an object based on its C<@XREF@>.
 =cut
 
 sub get_xref {
-    my ($self, $xref) = @_;
+    my ( $self, $xref ) = @_;
     return $self->{global}->{xref}->{$xref};
 }
 
